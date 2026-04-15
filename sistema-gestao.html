@@ -502,7 +502,6 @@
   #pdf-doc {
     background: #fff;
     width: 794px;
-    min-height: 1123px;
     border-radius: 4px;
     overflow: hidden;
     font-family: 'Montserrat', sans-serif;
@@ -660,7 +659,7 @@
   .pdf-footer .right { font-size: 0.65rem; color: #888; }
 
   @media print {
-    @page { margin: 0; size: A4 portrait; }
+    @page { margin: 0; size: auto; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     html, body {
       background: #fff !important;
