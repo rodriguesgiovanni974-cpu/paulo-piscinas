@@ -34,7 +34,17 @@ create table if not exists orcamentos (
   created_at timestamptz default now()
 );
 
+create table if not exists gastos_recorrentes (
+  id bigserial primary key,
+  descricao text not null,
+  categoria text default 'Outros',
+  valor numeric not null default 0,
+  ativo boolean default true,
+  created_at timestamptz default now()
+);
+
 -- Desabilita RLS (sem autenticação por enquanto)
 alter table clientes disable row level security;
 alter table lancamentos disable row level security;
 alter table orcamentos disable row level security;
+alter table gastos_recorrentes disable row level security;

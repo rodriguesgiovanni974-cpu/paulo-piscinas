@@ -128,6 +128,25 @@
   .sc-gasto .sc-value { color: var(--vermelho); }
   .sc-lucro .sc-value { color: var(--azul-claro); }
   .sc-clientes .sc-value { color: var(--azul-vivo); }
+  .sc-recorrente .sc-value { color: var(--amarelo); }
+
+  /* TABS INTERNAS (orçamento) */
+  .inner-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+  .inner-tab {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .inner-tab:hover { background: var(--border); color: var(--text); }
+  .inner-tab.active { background: var(--azul-medio); color: #fff; border-color: var(--azul-medio); }
 
   /* SECTION HEADER */
   .section-header {
@@ -769,7 +788,12 @@
       <div class="summary-card sc-lucro">
         <div class="sc-label">Lucro Líquido</div>
         <div class="sc-value" id="fin-lucro">R$ 0</div>
-        <div class="sc-sub">entradas − saídas</div>
+        <div class="sc-sub">entradas − saídas − recorrentes</div>
+      </div>
+      <div class="summary-card sc-recorrente">
+        <div class="sc-label">Recorrentes (mês)</div>
+        <div class="sc-value" id="fin-recorrente">R$ 0</div>
+        <div class="sc-sub">fixos mensais ativos</div>
       </div>
     </div>
 
@@ -795,6 +819,28 @@
         </thead>
         <tbody id="tabela-lancamentos">
           <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum lançamento ainda</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- GASTOS RECORRENTES -->
+    <div class="section-header" style="margin-top:32px;">
+      <div class="section-title">GASTOS RECORRENTES</div>
+      <button class="btn btn-sm" style="background:rgba(243,156,18,0.15);color:var(--amarelo);border:1px solid rgba(243,156,18,0.3);" onclick="abrirModalRecorrente()">+ Novo Recorrente</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Valor / Mês</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-recorrentes">
+          <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum gasto recorrente cadastrado</td></tr>
         </tbody>
       </table>
     </div>
@@ -880,12 +926,17 @@
       <div class="section-title">NOVO ORÇAMENTO</div>
     </div>
 
+    <!-- Tabs internas -->
+    <div class="inner-tabs">
+      <button class="inner-tab active" id="orc-tab-servico" onclick="showOrcTab('servico')">Serviço</button>
+      <button class="inner-tab" id="orc-tab-produto" onclick="showOrcTab('produto')">Produtos</button>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
-      <!-- Coluna esquerda: formulário -->
-      <div class="orc-form-card">
+      <!-- FORMULÁRIO SERVIÇO -->
+      <div id="orc-form-servico" class="orc-form-card">
         <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">Dados do Cliente</div>
-
         <div class="form-group">
           <label>Nome do Cliente</label>
           <input type="text" id="orc-cliente-nome" placeholder="Nome completo">
@@ -898,21 +949,51 @@
           <label>Telefone</label>
           <input type="text" id="orc-cliente-tel" placeholder="(15) 99999-9999">
         </div>
-
-        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 12px;">Serviços / Itens</div>
-
-        <div id="orc-itens-lista">
-          <!-- itens adicionados aqui -->
-        </div>
-
-        <button class="btn" style="width:100%;background:rgba(0,150,199,0.1);color:var(--azul-vivo);border:1px dashed rgba(0,150,199,0.3);margin-top:8px;" onclick="adicionarItemOrc()">+ Adicionar Item</button>
-
+        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 12px;">Serviços</div>
+        <div id="orc-itens-lista"></div>
+        <button class="btn" style="width:100%;background:rgba(0,150,199,0.1);color:var(--azul-vivo);border:1px dashed rgba(0,150,199,0.3);margin-top:8px;" onclick="adicionarItemOrc()">+ Adicionar Serviço</button>
         <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 12px;">Observações</div>
         <div class="form-group">
-          <textarea id="orc-obs" rows="3" placeholder="Validade do orçamento, condições, forma de pagamento..."></textarea>
+          <textarea id="orc-obs" rows="3" placeholder="Validade, condições, forma de pagamento..."></textarea>
         </div>
-
         <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:12px;" onclick="visualizarOrcamento()">Visualizar e Gerar PDF</button>
+      </div>
+
+      <!-- FORMULÁRIO PRODUTOS -->
+      <div id="orc-form-produto" class="orc-form-card" style="display:none;">
+        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">Dados do Cliente</div>
+        <div class="form-group">
+          <label>Nome do Cliente</label>
+          <input type="text" id="orc-prod-cliente-nome" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label>Endereço</label>
+          <input type="text" id="orc-prod-cliente-end" placeholder="Rua, número, bairro">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cidade</label>
+            <input type="text" id="orc-prod-cliente-cidade" placeholder="Cidade">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="orc-prod-cliente-tel" placeholder="(15) 99999-9999">
+          </div>
+        </div>
+        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 4px;">Produtos</div>
+        <div style="display:grid;grid-template-columns:1fr 70px 120px 32px;gap:8px;margin-bottom:6px;padding:0 2px;">
+          <span style="font-size:0.58rem;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;">Nome</span>
+          <span style="font-size:0.58rem;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;text-align:center;">Qtd</span>
+          <span style="font-size:0.58rem;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;text-align:right;">Vr. Unit.</span>
+          <span></span>
+        </div>
+        <div id="orc-prod-lista"></div>
+        <button class="btn" style="width:100%;background:rgba(0,150,199,0.1);color:var(--azul-vivo);border:1px dashed rgba(0,150,199,0.3);margin-top:8px;" onclick="adicionarProduto()">+ Adicionar Produto</button>
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+          <span style="font-size:0.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Total</span>
+          <span id="orc-prod-total" style="font-size:1.1rem;font-weight:700;color:var(--verde);">R$ 0,00</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;padding:12px;" onclick="visualizarOrcamentoProdutos()">Visualizar e Gerar PDF</button>
       </div>
 
       <!-- Coluna direita: orçamentos salvos -->
@@ -1170,6 +1251,39 @@
   </div>
 </div>
 
+<!-- MODAL GASTO RECORRENTE -->
+<div class="modal-overlay" id="modal-recorrente">
+  <div class="modal">
+    <div class="modal-title">NOVO GASTO RECORRENTE</div>
+    <div class="form-group">
+      <label>Descrição</label>
+      <input type="text" id="rec-descricao" placeholder="Ex: Aluguel, Internet, Funcionário...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="rec-categoria">
+          <option value="Aluguel">Aluguel</option>
+          <option value="Funcionário">Funcionário</option>
+          <option value="Internet / Telefone">Internet / Telefone</option>
+          <option value="Combustível">Combustível</option>
+          <option value="Equipamentos">Equipamentos</option>
+          <option value="Contabilidade">Contabilidade</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Valor Mensal (R$)</label>
+        <input type="number" id="rec-valor" placeholder="0,00" step="0.01">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="fecharModal('modal-recorrente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRecorrente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===================== SUPABASE =====================
 const { createClient } = supabase;
@@ -1187,7 +1301,7 @@ function showSection(name, btn) {
   if (btn) btn.classList.add('active');
   else if (event && event.target) event.target.classList.add('active');
   if (name === 'clientes') renderClientes();
-  if (name === 'financeiro') renderFinanceiro();
+  if (name === 'financeiro') { renderFinanceiro(); renderGastosRecorrentes(); }
   if (name === 'relatorio') gerarRelatorio();
   if (name === 'orcamento') { renderOrcamentos(); renderItensOrc(); }
 }
@@ -1460,7 +1574,10 @@ async function excluirLancamento(id) {
 async function renderFinanceiro() {
   const tbody = document.getElementById('tabela-lancamentos');
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Carregando...</td></tr>';
-  const { data: lancamentos } = await sb.from('lancamentos').select('*').order('data', { ascending: false });
+  const [{ data: lancamentos }, { data: recorrentes }] = await Promise.all([
+    sb.from('lancamentos').select('*').order('data', { ascending: false }),
+    sb.from('gastos_recorrentes').select('*').eq('ativo', true)
+  ]);
   const agora = new Date();
   const mes = agora.getMonth();
   const ano = agora.getFullYear();
@@ -1470,9 +1587,11 @@ async function renderFinanceiro() {
   });
   const receita = doMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
   const gasto = doMes.filter(l => l.tipo === 'gasto').reduce((s, l) => s + l.valor, 0);
+  const totalRecorrente = (recorrentes || []).reduce((s, r) => s + r.valor, 0);
   document.getElementById('fin-receita').textContent = 'R$ ' + receita.toFixed(2).replace('.', ',');
   document.getElementById('fin-gasto').textContent = 'R$ ' + gasto.toFixed(2).replace('.', ',');
-  document.getElementById('fin-lucro').textContent = 'R$ ' + (receita - gasto).toFixed(2).replace('.', ',');
+  document.getElementById('fin-recorrente').textContent = 'R$ ' + totalRecorrente.toFixed(2).replace('.', ',');
+  document.getElementById('fin-lucro').textContent = 'R$ ' + (receita - gasto - totalRecorrente).toFixed(2).replace('.', ',');
   if (!lancamentos || lancamentos.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum lançamento ainda</td></tr>';
     return;
@@ -1487,6 +1606,65 @@ async function renderFinanceiro() {
         ${l.tipo === 'receita' ? '+' : '-'} R$ ${l.valor.toFixed(2).replace('.', ',')}
       </td>
       <td><button class="btn btn-danger" onclick="excluirLancamento(${l.id})">×</button></td>
+    </tr>
+  `).join('');
+}
+
+// ===================== GASTOS RECORRENTES =====================
+function abrirModalRecorrente() {
+  document.getElementById('modal-recorrente').classList.add('open');
+}
+
+async function salvarRecorrente() {
+  const descricao = document.getElementById('rec-descricao').value.trim();
+  if (!descricao) { alert('Informe a descrição.'); return; }
+  const valor = parseFloat(document.getElementById('rec-valor').value) || 0;
+  if (!valor) { alert('Informe o valor.'); return; }
+  const categoria = document.getElementById('rec-categoria').value;
+  const { error } = await sb.from('gastos_recorrentes').insert({ descricao, categoria, valor, ativo: true });
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+  fecharModal('modal-recorrente');
+  document.getElementById('rec-descricao').value = '';
+  document.getElementById('rec-valor').value = '';
+  renderGastosRecorrentes();
+  renderFinanceiro();
+}
+
+async function excluirRecorrente(id) {
+  if (!confirm('Excluir este gasto recorrente?')) return;
+  await sb.from('gastos_recorrentes').delete().eq('id', id);
+  renderGastosRecorrentes();
+  renderFinanceiro();
+}
+
+async function toggleRecorrente(id, ativo) {
+  await sb.from('gastos_recorrentes').update({ ativo }).eq('id', id);
+  renderGastosRecorrentes();
+  renderFinanceiro();
+}
+
+async function renderGastosRecorrentes() {
+  const tbody = document.getElementById('tabela-recorrentes');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px;">Carregando...</td></tr>';
+  const { data: lista } = await sb.from('gastos_recorrentes').select('*').order('created_at');
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum gasto recorrente cadastrado</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(r => `
+    <tr>
+      <td>${r.descricao}</td>
+      <td><span class="badge" style="background:rgba(243,156,18,0.1);color:var(--amarelo);">${r.categoria}</span></td>
+      <td style="font-weight:700;color:var(--amarelo);">R$ ${parseFloat(r.valor).toFixed(2).replace('.', ',')}</td>
+      <td>
+        <button onclick="toggleRecorrente(${r.id}, ${!r.ativo})"
+          class="badge ${r.ativo ? 'badge-ativo' : 'badge-inativo'}"
+          style="border:none;cursor:pointer;padding:5px 10px;">
+          ${r.ativo ? 'Ativo' : 'Inativo'}
+        </button>
+      </td>
+      <td><button class="btn btn-danger" onclick="excluirRecorrente(${r.id})">×</button></td>
     </tr>
   `).join('');
 }
@@ -1665,117 +1843,192 @@ async function gerarNumeroOrc() {
   return String((count || 0) + 1).padStart(3, '0');
 }
 
+const pdfLogoSVG = `<svg style="width:52px;height:52px;" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="28" r="12" fill="rgba(255,255,255,0.9)"/><line x1="28" y1="4" x2="28" y2="12" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/><line x1="28" y1="44" x2="28" y2="52" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/><line x1="4" y1="28" x2="12" y2="28" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="28" x2="52" y2="28" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/><line x1="11.5" y1="11.5" x2="17" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/><line x1="39" y1="39" x2="44.5" y2="44.5" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/><line x1="44.5" y1="11.5" x2="39" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/><line x1="17" y1="39" x2="11.5" y2="44.5" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/><path d="M18 30 C21 25, 24 25, 28 29 C32 33, 35 33, 38 28" stroke="#0096c7" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+
+function pdfHeaderHTML(dataFmt) {
+  return `
+    <div style="background:linear-gradient(135deg,#023e8a 0%,#0077b6 60%,#0096c7 100%);padding:28px 48px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        ${pdfLogoSVG}
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:1.9rem;font-weight:900;color:white;letter-spacing:4px;line-height:1;">PAULO</div>
+          <div style="font-size:0.5rem;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:5px;text-transform:uppercase;margin-top:3px;">Piscina · Manutenção &amp; Limpeza</div>
+        </div>
+      </div>
+      <div style="text-align:right;color:white;">
+        <div style="font-size:0.6rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;opacity:0.7;">Data do Orçamento</div>
+        <div style="font-size:1rem;font-weight:700;margin-top:4px;">${dataFmt}</div>
+      </div>
+    </div>`;
+}
+
+function pdfClienteHTML(nome, end, cidade, tel) {
+  return `
+    <div style="margin-bottom:28px;">
+      <div style="font-size:0.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#0096c7;border-bottom:2px solid #caf0f8;padding-bottom:6px;margin-bottom:16px;">Dados do Cliente</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;">
+        <div style="grid-column:1/-1;"><div style="font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#0077b6;margin-bottom:3px;">Cliente</div><div style="font-size:0.9rem;font-weight:600;color:#012a6e;">${nome}</div></div>
+        ${end ? `<div style="grid-column:1/-1;"><div style="font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#0077b6;margin-bottom:3px;">Endereço</div><div style="font-size:0.85rem;color:#012a6e;">${end}</div></div>` : ''}
+        ${cidade ? `<div><div style="font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#0077b6;margin-bottom:3px;">Cidade</div><div style="font-size:0.85rem;color:#012a6e;">${cidade}</div></div>` : ''}
+        ${tel ? `<div><div style="font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#0077b6;margin-bottom:3px;">Telefone</div><div style="font-size:0.85rem;color:#012a6e;">${tel}</div></div>` : ''}
+      </div>
+    </div>`;
+}
+
+function pdfTotalHTML(total) {
+  return `
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:16px;padding-top:16px;border-top:2px solid #caf0f8;">
+      <div style="background:linear-gradient(135deg,#023e8a,#0096c7);padding:10px 20px;border-radius:8px;display:flex;gap:24px;align-items:center;">
+        <span style="font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.8);">Total</span>
+        <span style="font-size:1.1rem;font-weight:700;color:white;min-width:100px;text-align:right;">R$ ${total.toFixed(2).replace('.',',')}</span>
+      </div>
+    </div>`;
+}
+
+function pdfFooterHTML() {
+  return `<div style="background:#023e8a;padding:12px 48px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:0.6rem;font-weight:600;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Paulo Piscinas · Manutenção &amp; Limpeza</span><span style="font-size:0.65rem;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:1px;">@paulo_piscinas01</span></div>`;
+}
+
 async function visualizarOrcamento() {
   const nome = document.getElementById('orc-cliente-nome').value.trim();
   if (!nome) { alert('Informe o nome do cliente.'); return; }
   if (orcItens.length === 0) { alert('Adicione pelo menos um item.'); return; }
 
-  const end  = document.getElementById('orc-cliente-end').value.trim();
-  const tel  = document.getElementById('orc-cliente-tel').value.trim();
-  const obs  = document.getElementById('orc-obs').value.trim();
-  const data = new Date().toISOString().split('T')[0];
-  const num  = await gerarNumeroOrc();
-
+  const end    = document.getElementById('orc-cliente-end').value.trim();
+  const tel    = document.getElementById('orc-cliente-tel').value.trim();
+  const obs    = document.getElementById('orc-obs').value.trim();
+  const data   = new Date().toISOString().split('T')[0];
+  const num    = await gerarNumeroOrc();
   const dataFmt = data.split('-').reverse().join('/');
-
-  const total = orcItens.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+  const total  = orcItens.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
 
   const itensHTML = orcItens.map(i => `
-    <tr>
-      <td>${i.descricao || '—'}</td>
-      <td style="text-align:right;font-weight:700;color:#023e8a;">R$ ${(parseFloat(i.valor)||0).toFixed(2).replace('.',',')}</td>
-    </tr>
-  `).join('');
+    <tr style="border-bottom:1px solid #e8f4f8;">
+      <td style="padding:10px 14px;font-size:0.82rem;color:#333;">${i.descricao || '—'}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:700;color:#023e8a;">R$ ${(parseFloat(i.valor)||0).toFixed(2).replace('.',',')}</td>
+    </tr>`).join('');
 
   const obsHTML = obs ? `
-    <div class="pdf-obs-box">
-      <div class="label">Observações</div>
-      <p>${obs}</p>
+    <div style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:8px;padding:14px 18px;margin-top:16px;">
+      <div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#0077b6;margin-bottom:6px;">Observações</div>
+      <p style="font-size:0.78rem;color:#444;line-height:1.6;">${obs}</p>
     </div>` : '';
 
   document.getElementById('pdf-doc').innerHTML = `
-    <div class="pdf-header">
-      <div class="pdf-logo-area">
-        <!-- Logo card fiel à identidade visual -->
-        <div style="background:linear-gradient(135deg,#caf0f8 0%,#90e0ef 100%);border-radius:16px;padding:16px 22px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:160px;">
-          <svg style="width:48px;height:48px;margin-bottom:4px;" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="28" cy="28" r="12" fill="#0096c7"/>
-            <line x1="28" y1="4" x2="28" y2="12" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
-            <line x1="28" y1="44" x2="28" y2="52" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
-            <line x1="4" y1="28" x2="12" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
-            <line x1="44" y1="28" x2="52" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
-            <line x1="11.5" y1="11.5" x2="17" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="39" y1="39" x2="44.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="44.5" y1="11.5" x2="39" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="17" y1="39" x2="11.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M18 30 C21 25, 24 25, 28 29 C32 33, 35 33, 38 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-          </svg>
-          <div style="font-family:'Cinzel',serif;font-size:1.5rem;font-weight:900;color:#023e8a;letter-spacing:5px;line-height:1;">PAULO</div>
-          <div style="font-family:'Cinzel',serif;font-size:0.55rem;font-weight:700;color:#0077b6;letter-spacing:10px;">PISCINA</div>
-          <div style="display:flex;gap:5px;margin-top:3px;">
-            <div style="width:7px;height:10px;background:#0077b6;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(180deg);opacity:0.45;"></div>
-            <div style="width:7px;height:10px;background:#0077b6;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(180deg) scale(1.2);opacity:0.7;"></div>
-            <div style="width:7px;height:10px;background:#0077b6;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(180deg);opacity:0.35;"></div>
-          </div>
-          <div style="font-family:'Montserrat',sans-serif;font-size:0.38rem;font-weight:600;color:#0096c7;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Manutenção &amp; Limpeza</div>
-        </div>
-      </div>
-      <div class="pdf-contato">
-        <p>📱 <strong>(15) 99757-5179</strong></p>
-        <p>✉️ paulo_piscinas01@icloud.com</p>
-        <p>📸 @paulo_piscinas01</p>
-      </div>
-    </div>
-
-    <div class="pdf-body">
-      <div class="pdf-titulo-doc">
-        <div>
-          <h1>ORÇAMENTO</h1>
-          <div class="pdf-num">Nº ${num} · Emitido em ${dataFmt}</div>
-        </div>
-        <div class="pdf-meta">
-          <p><strong>Data de emissão:</strong> ${dataFmt}</p>
-        </div>
-      </div>
-
-      <div class="pdf-cliente-box">
-        <div class="label">Cliente</div>
-        <div class="nome">${nome}</div>
-        ${end ? `<div class="end">📍 ${end}</div>` : ''}
-        ${tel ? `<div class="end">📱 ${tel}</div>` : ''}
-      </div>
-
-      <table class="pdf-table">
-        <thead>
-          <tr>
-            <th>Descrição do Serviço</th>
-            <th style="text-align:right;">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${itensHTML}
-        </tbody>
+    ${pdfHeaderHTML(dataFmt)}
+    <div style="padding:32px 48px;">
+      ${pdfClienteHTML(nome, end, '', tel)}
+      <div style="font-size:0.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#0096c7;border-bottom:2px solid #caf0f8;padding-bottom:6px;margin-bottom:0;">Serviços</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:#023e8a;"><th style="padding:10px 14px;text-align:left;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;">Descrição do Serviço</th><th style="padding:10px 14px;text-align:right;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;width:130px;">Valor</th></tr></thead>
+        <tbody>${itensHTML}</tbody>
       </table>
-
-      <div class="pdf-total-area">
-        <div class="pdf-total-box">
-          <div class="label">Total do Orçamento</div>
-          <div class="value">R$ ${total.toFixed(2).replace('.',',')}</div>
-        </div>
-      </div>
-
+      ${pdfTotalHTML(total)}
       ${obsHTML}
     </div>
-
-    <div class="pdf-footer">
-      <div class="left">PAULO PISCINA · Manutenção &amp; Limpeza</div>
-      <div class="right">@paulo_piscinas01 · (15) 99757-5179</div>
-    </div>
+    ${pdfFooterHTML()}
   `;
 
   document.getElementById('pdf-overlay').classList.add('open');
+  await sb.from('orcamentos').insert({ num, cliente: nome, data, total });
+  renderOrcamentos();
+}
 
-  // Salvar no Supabase
+// ===== ORÇAMENTO PRODUTOS =====
+let orcProdItens = [];
+
+function adicionarProduto() {
+  orcProdItens.push({ id: Date.now(), nome: '', qtd: 1, valor: 0 });
+  renderItensProd();
+}
+
+function removerProduto(id) {
+  orcProdItens = orcProdItens.filter(i => i.id !== id);
+  renderItensProd();
+}
+
+function renderItensProd() {
+  const container = document.getElementById('orc-prod-lista');
+  if (!container) return;
+  if (orcProdItens.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:12px 0;">Nenhum produto. Clique em + Adicionar Produto.</div>';
+    calcularTotalProd();
+    return;
+  }
+  container.innerHTML = orcProdItens.map(item => `
+    <div style="display:grid;grid-template-columns:1fr 70px 120px 32px;gap:8px;margin-bottom:8px;align-items:center;">
+      <input type="text" placeholder="Nome do produto" value="${item.nome}"
+        oninput="orcProdItens.find(i=>i.id===${item.id}).nome=this.value"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:0.78rem;outline:none;">
+      <input type="number" placeholder="Qtd" value="${item.qtd}"
+        oninput="orcProdItens.find(i=>i.id===${item.id}).qtd=parseFloat(this.value)||0;calcularTotalProd()"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:0.78rem;outline:none;text-align:center;">
+      <input type="number" placeholder="R$ unit." value="${item.valor||''}"
+        oninput="orcProdItens.find(i=>i.id===${item.id}).valor=parseFloat(this.value)||0;calcularTotalProd()"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--verde);font-family:'Montserrat',sans-serif;font-size:0.78rem;font-weight:700;outline:none;">
+      <button onclick="removerProduto(${item.id})"
+        style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--vermelho);border-radius:6px;padding:8px;cursor:pointer;font-size:0.8rem;">×</button>
+    </div>
+  `).join('');
+  calcularTotalProd();
+}
+
+function calcularTotalProd() {
+  const total = orcProdItens.reduce((s, i) => s + ((parseFloat(i.qtd)||0) * (parseFloat(i.valor)||0)), 0);
+  const el = document.getElementById('orc-prod-total');
+  if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+function showOrcTab(tab) {
+  document.getElementById('orc-form-servico').style.display = tab === 'servico' ? '' : 'none';
+  document.getElementById('orc-form-produto').style.display = tab === 'produto' ? '' : 'none';
+  document.querySelectorAll('.inner-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('orc-tab-' + tab).classList.add('active');
+}
+
+async function visualizarOrcamentoProdutos() {
+  const nome = document.getElementById('orc-prod-cliente-nome').value.trim();
+  if (!nome) { alert('Informe o nome do cliente.'); return; }
+  if (orcProdItens.length === 0) { alert('Adicione pelo menos um produto.'); return; }
+
+  const end    = document.getElementById('orc-prod-cliente-end').value.trim();
+  const cidade = document.getElementById('orc-prod-cliente-cidade').value.trim();
+  const tel    = document.getElementById('orc-prod-cliente-tel').value.trim();
+  const data   = new Date().toISOString().split('T')[0];
+  const num    = await gerarNumeroOrc();
+  const dataFmt = data.split('-').reverse().join('/');
+  const total  = orcProdItens.reduce((s, i) => s + ((parseFloat(i.qtd)||0) * (parseFloat(i.valor)||0)), 0);
+
+  const itensHTML = orcProdItens.map(i => {
+    const sub = (parseFloat(i.qtd)||0) * (parseFloat(i.valor)||0);
+    return `<tr style="border-bottom:1px solid #e8f4f8;">
+      <td style="padding:10px 14px;font-size:0.82rem;color:#333;">${i.nome || '—'}</td>
+      <td style="padding:10px 14px;text-align:center;font-size:0.82rem;color:#555;">${i.qtd}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:0.82rem;color:#555;">R$ ${(parseFloat(i.valor)||0).toFixed(2).replace('.',',')}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:700;color:#023e8a;">R$ ${sub.toFixed(2).replace('.',',')}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('pdf-doc').innerHTML = `
+    ${pdfHeaderHTML(dataFmt)}
+    <div style="padding:32px 48px;">
+      ${pdfClienteHTML(nome, end, cidade, tel)}
+      <div style="font-size:0.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#0096c7;border-bottom:2px solid #caf0f8;padding-bottom:6px;margin-bottom:0;">Produtos</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:#023e8a;">
+          <th style="padding:10px 14px;text-align:left;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;">Nome do Produto</th>
+          <th style="padding:10px 14px;text-align:center;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;width:70px;">Qtd.</th>
+          <th style="padding:10px 14px;text-align:right;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;width:110px;">Vr. Unit.</th>
+          <th style="padding:10px 14px;text-align:right;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;width:110px;">Subtotal</th>
+        </tr></thead>
+        <tbody>${itensHTML}</tbody>
+      </table>
+      ${pdfTotalHTML(total)}
+    </div>
+    ${pdfFooterHTML()}
+  `;
+
+  document.getElementById('pdf-overlay').classList.add('open');
   await sb.from('orcamentos').insert({ num, cliente: nome, data, total });
   renderOrcamentos();
 }
@@ -1806,7 +2059,10 @@ async function renderOrcamentos() {
 // ===================== INIT =====================
 renderClientes();
 renderFinanceiro();
+renderGastosRecorrentes();
 renderOrcamentos();
+renderItensOrc();
+renderItensProd();
 </script>
 
 </body>
