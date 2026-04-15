@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carrossel — Paulo Piscinas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #111;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px 16px;
+  }
+
+  .label {
+    color: #666;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    align-self: flex-start;
+    margin-left: 4px;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px;
+  }
+
+  /* ── BRANDING FLYAI ── */
+  .brand {
+    position: absolute;
+    bottom: 48px;
+    right: 60px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.55;
+  }
+  .brand svg { width: 18px; height: 18px; }
+  .brand span {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+
+  /* slide counter */
+  .counter {
+    position: absolute;
+    bottom: 52px;
+    left: 60px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* ── SLIDE 1 — HOOK ── */
+  .s1 {
+    background: linear-gradient(160deg, #023e8a 0%, #012055 100%);
+  }
+  .s1 .wave-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0.07;
+    background: repeating-linear-gradient(
+      -30deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,0.4) 40px,
+      rgba(255,255,255,0.4) 42px
+    );
+  }
+  .s1 .tag {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #48cae4;
+    margin-bottom: 32px;
+  }
+  .s1 h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 72px;
+    line-height: 1.05;
+    color: #fff;
+    letter-spacing: -1px;
+    max-width: 780px;
+    margin-bottom: 40px;
+  }
+  .s1 h1 span { color: #48cae4; }
+  .s1 p {
+    font-size: 22px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  .s1 .arrow {
+    position: absolute;
+    right: 72px;
+    bottom: 50%;
+    transform: translateY(50%);
+    font-size: 80px;
+    color: rgba(255,255,255,0.08);
+    font-weight: 900;
+  }
+
+  /* ── SLIDE 2 — PROBLEMA ── */
+  .s2 {
+    background: #0a0a0a;
+    align-items: flex-start;
+  }
+  .s2 .label-top {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #0096c7;
+    margin-bottom: 48px;
+  }
+  .s2 h2 {
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 64px;
+    max-width: 840px;
+  }
+  .s2 h2 span { color: #0096c7; }
+  .pain-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .pain-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    font-size: 24px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 400;
+  }
+  .pain-list li .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #0096c7;
+    flex-shrink: 0;
+    margin-top: 12px;
+  }
+
+  /* ── SPLIT LAYOUT (slides 3, 4, 5) ── */
+  .split {
+    flex-direction: row !important;
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+  .split-left {
+    flex: 0 0 420px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 72px 48px 72px 72px;
+    position: relative;
+    z-index: 2;
+  }
+  .split-right {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .split-right::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .screen-frame {
+    position: absolute;
+    inset: 32px 24px 32px 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+  }
+  .screen-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+    display: block;
+  }
+
+  /* ── SLIDE 3 — SOLUÇÃO ── */
+  .s3 {
+    background: linear-gradient(160deg, #012a6e 0%, #023e8a 60%, #0077b6 100%);
+  }
+  .s3 .split-right::before {
+    background: linear-gradient(to right, #023e8a, transparent);
+  }
+  .s3 .tag {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #caf0f8;
+    margin-bottom: 32px;
+    opacity: 0.7;
+  }
+  .s3 h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 44px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .s3 .subtitle {
+    font-size: 17px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+    margin-bottom: 36px;
+  }
+  .s3 .badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .s3 .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* ── SLIDE 4 — FEATURES ── */
+  .s4 {
+    background: #0d0d0d;
+  }
+  .s4 .split-right::before {
+    background: linear-gradient(to right, #0d0d0d, transparent);
+  }
+  .s4 .label-top {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #0096c7;
+    margin-bottom: 24px;
+  }
+  .s4 h2 {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1.5px;
+    margin-bottom: 32px;
+    line-height: 1.1;
+  }
+  .feat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .feat-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .feat-item .icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .feat-item .text h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 3px;
+    letter-spacing: -0.3px;
+  }
+  .feat-item .text p {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  /* ── SLIDE 5 — RELATÓRIO ── */
+  .s5 {
+    background: #000;
+  }
+  .s5 .split-left {
+    padding-left: 72px;
+  }
+  .s5 .split-right::before {
+    background: linear-gradient(to right, #000, transparent);
+  }
+  .s5 .tag {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 28px;
+  }
+  .s5 h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 42px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 40px;
+  }
+  .s5 h2 span { color: #48cae4; }
+  .metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .metric {
+    background: #111;
+    border: 1px solid #1a1a1a;
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .metric .num {
+    font-size: 36px;
+    font-weight: 900;
+    color: #48cae4;
+    line-height: 1;
+    letter-spacing: -1px;
+    min-width: 80px;
+  }
+  .metric .desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  /* ── SLIDE 6 — CTA ── */
+  .s6 {
+    background: #000;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+  }
+  .s6 .pre {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #0096c7;
+    margin-bottom: 40px;
+  }
+  .s6 h2 {
+    font-size: 60px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+    max-width: 800px;
+  }
+  .s6 h2 span { color: #0096c7; }
+  .s6 p {
+    font-size: 22px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 60px;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+  .s6 .cta-btn {
+    background: #0096c7;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    padding: 22px 56px;
+    border-radius: 100px;
+    letter-spacing: -0.5px;
+    margin-bottom: 32px;
+  }
+  .s6 .handle {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ────────────────────────────────────── -->
+<!-- SLIDE 1 — HOOK -->
+<!-- ────────────────────────────────────── -->
+<span class="label">Slide 1 / 6</span>
+<div class="slide s1">
+  <div class="wave-bg"></div>
+  <p class="tag">Sistema de Gestão</p>
+  <h1>Sua empresa de <span>piscinas</span><br>ainda funciona<br>no papel?</h1>
+  <p>Clientes espalhados, histórico na cabeça e financeiro no achismo. Existe uma solução melhor.</p>
+  <div class="arrow">→</div>
+  <div class="brand">
+    <svg viewBox="0 0 120 120" fill="white"><polygon points="70,12 38,62 58,62 50,108 82,54 62,54"/></svg>
+    <span>Fly.AI</span>
+  </div>
+  <div class="counter">01 / 06</div>
+</div>
+
+<!-- ────────────────────────────────────── -->
+<!-- SLIDE 2 — PROBLEMA -->
+<!-- ────────────────────────────────────── -->
+<span class="label">Slide 2 / 6</span>
+<div class="slide s2">
+  <p class="label-top">O Problema</p>
+  <h2>Negócio real,<br>gestão <span>no improviso</span></h2>
+  <ul class="pain-list">
+    <li><span class="dot"></span>Não sabe quais clientes estão em dia e quais atrasados</li>
+    <li><span class="dot"></span>Histórico de visitas e produtos na memória — ou no papel</li>
+    <li><span class="dot"></span>Não sabe quanto faturou esse mês nem o custo por serviço</li>
+    <li><span class="dot"></span>Cada novo cliente é mais uma anotação solta</li>
+  </ul>
+  <div class="brand">
+    <svg viewBox="0 0 120 120" fill="white"><polygon points="70,12 38,62 58,62 50,108 82,54 62,54"/></svg>
+    <span>Fly.AI</span>
+  </div>
+  <div class="counter">02 / 06</div>
+</div>
+
+<!-- ────────────────────────────────────── -->
+<!-- SLIDE 3 — SOLUÇÃO + SCREENSHOT CLIENTES -->
+<!-- ────────────────────────────────────── -->
+<span class="label">Slide 3 / 6</span>
+<div class="slide s3 split">
+  <div class="split-left">
+    <p class="tag">A Solução</p>
+    <h2>Um sistema feito para quem cuida de piscinas</h2>
+    <p class="subtitle">Centralize clientes, visitas, financeiro e relatórios — tudo num só lugar, sem planilha, sem papel.</p>
+    <div class="badges">
+      <span class="badge">Clientes</span>
+      <span class="badge">Financeiro</span>
+      <span class="badge">Relatório</span>
+      <span class="badge">Mobile</span>
+    </div>
+    <div class="brand">
+      <svg viewBox="0 0 120 120" fill="white"><polygon points="70,12 38,62 58,62 50,108 82,54 62,54"/></svg>
+      <span>Fly.AI</span>
+    </div>
+    <div class="counter">03 / 06</div>
+  </div>
+  <div class="split-right">
+    <div class="screen-frame">
+      <img src="slides/sistemas/paulo-clientes.png" alt="Sistema — Clientes">
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────── -->
+<!-- SLIDE 4 — FEATURES + SCREENSHOT FINANCEIRO -->
+<!-- ────────────────────────────────────── -->
+<span class="label">Slide 4 / 6</span>
+<div class="slide s4 split">
+  <div class="split-left">
+    <p class="label-top">O que o Sistema Faz</p>
+    <h2>Tudo num<br>lugar só</h2>
+    <div class="feat-list">
+      <div class="feat-item">
+        <span class="icon">👤</span>
+        <div class="text">
+          <h3>Cadastro de Clientes</h3>
+          <p>Nome, endereço, telefone, frequência e histórico de cada piscina.</p>
+        </div>
+      </div>
+      <div class="feat-item">
+        <span class="icon">📅</span>
+        <div class="text">
+          <h3>Controle de Visitas</h3>
+          <p>Registro de cada atendimento com data, produtos e observações.</p>
+        </div>
+      </div>
+      <div class="feat-item">
+        <span class="icon">💰</span>
+        <div class="text">
+          <h3>Financeiro Completo</h3>
+          <p>Mensalidades, cobranças e status de recebimento por cliente.</p>
+        </div>
+      </div>
+      <div class="feat-item">
+        <span class="icon">📊</span>
+        <div class="text">
+          <h3>Relatório Mensal</h3>
+          <p>Faturamento, clientes ativos, inadimplentes e visitas realizadas.</p>
+        </div>
+      </div>
+    </div>
+    <div class="brand">
+      <svg viewBox="0 0 120 120" fill="white"><polygon points="70,12 38,62 58,62 50,108 82,54 62,54"/></svg>
+      <span>Fly.AI</span>
+    </div>
+    <div class="counter">04 / 06</div>
+  </div>
+  <div class="split-right">
+    <div class="screen-frame">
+      <img src="slides/sistemas/paulo-financeiro.png" alt="Sistema — Financeiro">
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────── -->
+<!-- SLIDE 5 — RESULTADO + SCREENSHOT RELATÓRIO -->
+<!-- ────────────────────────────────────── -->
+<span class="label">Slide 5 / 6</span>
+<div class="slide s5 split">
+  <div class="split-left">
+    <p class="tag">O Resultado</p>
+    <h2>De desorganizado<br>a <span>profissional</span><br>em dias</h2>
+    <div class="metrics">
+      <div class="metric">
+        <div class="num">30+</div>
+        <div class="desc">Clientes gerenciados com histórico completo</div>
+      </div>
+      <div class="metric">
+        <div class="num">0</div>
+        <div class="desc">Papéis, cadernos ou planilhas perdidas</div>
+      </div>
+      <div class="metric">
+        <div class="num">100%</div>
+        <div class="desc">Controle do que foi cobrado e recebido</div>
+      </div>
+    </div>
+    <div class="brand">
+      <svg viewBox="0 0 120 120" fill="white"><polygon points="70,12 38,62 58,62 50,108 82,54 62,54"/></svg>
+      <span>Fly.AI</span>
+    </div>
+    <div class="counter">05 / 06</div>
+  </div>
+  <div class="split-right">
+    <div class="screen-frame">
+      <img src="slides/sistemas/paulo-relatorio.png" alt="Sistema — Relatório">
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────── -->
+<!-- SLIDE 6 — CTA -->
+<!-- ────────────────────────────────────── -->
+<span class="label">Slide 6 / 6</span>
+<div class="slide s6">
+  <p class="pre">Quer um igual pro seu negócio?</p>
+  <h2>Seu sistema<br><span>personalizado</span><br>começa aqui</h2>
+  <p>Automação e tecnologia feitas pra quem trabalha de verdade.</p>
+  <div class="cta-btn">Fala comigo no Direct</div>
+  <div class="handle">@flyai.oficial</div>
+  <div class="brand" style="opacity:1">
+    <svg viewBox="0 0 120 120" fill="white" style="width:22px;height:22px"><polygon points="70,12 38,62 58,62 50,108 82,54 62,54"/></svg>
+    <span style="font-size:16px">Fly.AI</span>
+  </div>
+  <div class="counter">06 / 06</div>
+</div>
+
+</body>
+</html>

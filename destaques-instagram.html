@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paulo Piscina — Capas de Destaque</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a18;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+    gap: 60px;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    color: rgba(255,255,255,0.15);
+    font-size: 0.7rem;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+  }
+
+  .row {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  /* === BASE DO DESTAQUE === */
+  .highlight {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* VERSÃO QUADRADA (formato Stories/Destaque real) */
+  .highlight-sq {
+    width: 220px;
+    height: 220px;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* === QUEM SOMOS === */
+  .qs {
+    background: linear-gradient(145deg, #023e8a 0%, #0077b6 60%, #0096c7 100%);
+  }
+  .qs .icon { font-size: 2.4rem; }
+  .qs .title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .qs .line {
+    width: 40px; height: 2px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 2px;
+  }
+
+  /* === DEPOIMENTOS === */
+  .dep {
+    background: linear-gradient(145deg, #caf0f8 0%, #90e0ef 60%, #48cae4 100%);
+  }
+  .dep .icon { font-size: 2.4rem; }
+  .dep .title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #023e8a;
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .dep .line {
+    width: 40px; height: 2px;
+    background: rgba(2,62,138,0.3);
+    border-radius: 2px;
+  }
+
+  /* === RESULTADOS === */
+  .res {
+    background: linear-gradient(145deg, #012a6e 0%, #023e8a 50%, #0077b6 100%);
+  }
+  .res .icon { font-size: 2.4rem; }
+  .res .title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #90e0ef;
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .res .line {
+    width: 40px; height: 2px;
+    background: rgba(144,224,239,0.4);
+    border-radius: 2px;
+  }
+
+  /* === SERVIÇOS === */
+  .serv {
+    background: linear-gradient(145deg, #0096c7 0%, #00b4d8 60%, #48cae4 100%);
+  }
+  .serv .icon { font-size: 2.4rem; }
+  .serv .title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .serv .line {
+    width: 40px; height: 2px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 2px;
+  }
+
+  /* === DICAS === */
+  .dicas {
+    background: linear-gradient(145deg, #90e0ef 0%, #caf0f8 100%);
+  }
+  .dicas .icon { font-size: 2.4rem; }
+  .dicas .title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #023e8a;
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .dicas .line {
+    width: 40px; height: 2px;
+    background: rgba(2,62,138,0.3);
+    border-radius: 2px;
+  }
+
+  /* ondas decorativas */
+  .wave {
+    position: absolute;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+    height: 50px;
+    opacity: 0.12;
+  }
+
+  /* anel externo (simula o ring do destaque) */
+  .ring-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .ring {
+    padding: 3px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #0077b6, #48cae4, #023e8a);
+  }
+  .ring .highlight {
+    outline: 3px solid #0a0a18;
+  }
+
+  .name-below {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+  }
+</style>
+</head>
+<body>
+
+  <h1>Paulo Piscina · Capas de Destaque Instagram</h1>
+
+  <!-- FORMATO CÍRCULO (preview como aparece no perfil) -->
+  <div>
+    <p class="label">Preview no perfil (círculo)</p>
+    <div class="row">
+
+      <div class="ring-wrapper">
+        <div class="ring">
+          <div class="highlight qs">
+            <span class="icon">👤</span>
+            <div class="line"></div>
+            <div class="title">QUEM<br>SOMOS</div>
+            <svg class="wave" viewBox="0 0 200 50"><path d="M0 30 Q50 10 100 30 Q150 50 200 30 L200 50 L0 50Z" fill="white"/></svg>
+          </div>
+        </div>
+        <span class="name-below">Quem Somos</span>
+      </div>
+
+      <div class="ring-wrapper">
+        <div class="ring">
+          <div class="highlight dep">
+            <span class="icon">⭐</span>
+            <div class="line"></div>
+            <div class="title">DEPOI-<br>MENTOS</div>
+            <svg class="wave" viewBox="0 0 200 50"><path d="M0 30 Q50 10 100 30 Q150 50 200 30 L200 50 L0 50Z" fill="#023e8a"/></svg>
+          </div>
+        </div>
+        <span class="name-below">Depoimentos</span>
+      </div>
+
+      <div class="ring-wrapper">
+        <div class="ring">
+          <div class="highlight res">
+            <span class="icon">✨</span>
+            <div class="line"></div>
+            <div class="title">RESUL-<br>TADOS</div>
+            <svg class="wave" viewBox="0 0 200 50"><path d="M0 30 Q50 10 100 30 Q150 50 200 30 L200 50 L0 50Z" fill="#90e0ef"/></svg>
+          </div>
+        </div>
+        <span class="name-below">Resultados</span>
+      </div>
+
+      <div class="ring-wrapper">
+        <div class="ring">
+          <div class="highlight serv">
+            <span class="icon">🔧</span>
+            <div class="line"></div>
+            <div class="title">SERVI-<br>ÇOS</div>
+            <svg class="wave" viewBox="0 0 200 50"><path d="M0 30 Q50 10 100 30 Q150 50 200 30 L200 50 L0 50Z" fill="white"/></svg>
+          </div>
+        </div>
+        <span class="name-below">Serviços</span>
+      </div>
+
+      <div class="ring-wrapper">
+        <div class="ring">
+          <div class="highlight dicas">
+            <span class="icon">💧</span>
+            <div class="line"></div>
+            <div class="title">DICAS<br>& CUIDADOS</div>
+            <svg class="wave" viewBox="0 0 200 50"><path d="M0 30 Q50 10 100 30 Q150 50 200 30 L200 50 L0 50Z" fill="#023e8a"/></svg>
+          </div>
+        </div>
+        <span class="name-below">Dicas</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FORMATO QUADRADO (arquivo exportável 1080x1080 stories) -->
+  <div>
+    <p class="label">Capas exportáveis (formato stories 1:1)</p>
+    <div class="row">
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div class="highlight-sq qs">
+          <svg width="48" height="48" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:4px;">
+            <circle cx="28" cy="28" r="12" fill="rgba(255,255,255,0.3)"/>
+            <line x1="28" y1="4" x2="28" y2="12" stroke="rgba(255,255,255,0.6)" stroke-width="3" stroke-linecap="round"/>
+            <line x1="28" y1="44" x2="28" y2="52" stroke="rgba(255,255,255,0.6)" stroke-width="3" stroke-linecap="round"/>
+            <line x1="4" y1="28" x2="12" y2="28" stroke="rgba(255,255,255,0.6)" stroke-width="3" stroke-linecap="round"/>
+            <line x1="44" y1="28" x2="52" y2="28" stroke="rgba(255,255,255,0.6)" stroke-width="3" stroke-linecap="round"/>
+            <line x1="11.5" y1="11.5" x2="17" y2="17" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="39" y1="39" x2="44.5" y2="44.5" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="44.5" y1="11.5" x2="39" y2="17" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="17" y1="39" x2="11.5" y2="44.5" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M18 30 C21 25, 24 25, 28 29 C32 33, 35 33, 38 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+          <div style="width:30px;height:1px;background:rgba(255,255,255,0.35);"></div>
+          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:#fff;letter-spacing:4px;text-align:center;line-height:1.5;">QUEM<br>SOMOS</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.42rem;font-weight:600;color:rgba(255,255,255,0.5);letter-spacing:3px;text-transform:uppercase;">Paulo Piscina</div>
+          <svg class="wave" viewBox="0 0 220 50"><path d="M0 30 Q55 10 110 30 Q165 50 220 30 L220 50 L0 50Z" fill="white"/></svg>
+        </div>
+        <span class="label" style="margin:0;">Quem Somos</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div class="highlight-sq dep">
+          <div style="font-size:2.2rem;margin-bottom:2px;">⭐</div>
+          <div style="width:30px;height:1px;background:rgba(2,62,138,0.3);"></div>
+          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:#023e8a;letter-spacing:4px;text-align:center;line-height:1.5;">DEPOI-<br>MENTOS</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.42rem;font-weight:600;color:rgba(2,62,138,0.4);letter-spacing:3px;text-transform:uppercase;">Paulo Piscina</div>
+          <svg class="wave" viewBox="0 0 220 50"><path d="M0 30 Q55 10 110 30 Q165 50 220 30 L220 50 L0 50Z" fill="#023e8a"/></svg>
+        </div>
+        <span class="label" style="margin:0;">Depoimentos</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div class="highlight-sq res">
+          <div style="font-size:2.2rem;margin-bottom:2px;">✨</div>
+          <div style="width:30px;height:1px;background:rgba(144,224,239,0.3);"></div>
+          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:#90e0ef;letter-spacing:4px;text-align:center;line-height:1.5;">RESUL-<br>TADOS</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.42rem;font-weight:600;color:rgba(144,224,239,0.4);letter-spacing:3px;text-transform:uppercase;">Paulo Piscina</div>
+          <svg class="wave" viewBox="0 0 220 50"><path d="M0 30 Q55 10 110 30 Q165 50 220 30 L220 50 L0 50Z" fill="#90e0ef"/></svg>
+        </div>
+        <span class="label" style="margin:0;">Resultados</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div class="highlight-sq serv">
+          <div style="font-size:2.2rem;margin-bottom:2px;">🔧</div>
+          <div style="width:30px;height:1px;background:rgba(255,255,255,0.3);"></div>
+          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:#fff;letter-spacing:4px;text-align:center;line-height:1.5;">SERVI-<br>ÇOS</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.42rem;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:3px;text-transform:uppercase;">Paulo Piscina</div>
+          <svg class="wave" viewBox="0 0 220 50"><path d="M0 30 Q55 10 110 30 Q165 50 220 30 L220 50 L0 50Z" fill="white"/></svg>
+        </div>
+        <span class="label" style="margin:0;">Serviços</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div class="highlight-sq dicas">
+          <div style="font-size:2.2rem;margin-bottom:2px;">💧</div>
+          <div style="width:30px;height:1px;background:rgba(2,62,138,0.2);"></div>
+          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:#023e8a;letter-spacing:4px;text-align:center;line-height:1.5;">DICAS<br>&amp; CUIDADOS</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.42rem;font-weight:600;color:rgba(2,62,138,0.4);letter-spacing:3px;text-transform:uppercase;">Paulo Piscina</div>
+          <svg class="wave" viewBox="0 0 220 50"><path d="M0 30 Q55 10 110 30 Q165 50 220 30 L220 50 L0 50Z" fill="#023e8a"/></svg>
+        </div>
+        <span class="label" style="margin:0;">Dicas</span>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

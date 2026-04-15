@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paulo Piscina — Sistema de Gestão</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul-escuro: #023e8a;
+    --azul-medio: #0077b6;
+    --azul-vivo: #0096c7;
+    --azul-claro: #90e0ef;
+    --azul-palido: #caf0f8;
+    --verde: #2ecc71;
+    --vermelho: #e74c3c;
+    --amarelo: #f39c12;
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #21262d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .nav-logo {
+    width: 36px; height: 36px;
+  }
+  .nav-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--azul-claro);
+    letter-spacing: 2px;
+  }
+  .nav-sub {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .tab-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .tab-btn:hover { background: var(--border); color: var(--text); }
+  .tab-btn.active { background: var(--azul-medio); color: #fff; }
+
+  /* MAIN */
+  main { padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS DE RESUMO */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .summary-card .sc-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .summary-card .sc-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .summary-card .sc-sub {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+  .sc-receita .sc-value { color: var(--verde); }
+  .sc-gasto .sc-value { color: var(--vermelho); }
+  .sc-lucro .sc-value { color: var(--azul-claro); }
+  .sc-clientes .sc-value { color: var(--azul-vivo); }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--azul-claro);
+    letter-spacing: 2px;
+  }
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-primary { background: var(--azul-medio); color: #fff; }
+  .btn-primary:hover { background: var(--azul-vivo); }
+  .btn-danger { background: transparent; color: var(--vermelho); border: 1px solid var(--vermelho); font-size: 0.65rem; padding: 4px 10px; border-radius: 6px; }
+  .btn-danger:hover { background: var(--vermelho); color: #fff; }
+  .btn-success { background: var(--verde); color: #fff; }
+  .btn-sm { padding: 5px 12px; font-size: 0.65rem; }
+
+  /* TABLE */
+  .table-wrapper {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    background: #1c2128;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td {
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    vertical-align: middle;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge-ativo { background: rgba(46,204,113,0.15); color: var(--verde); }
+  .badge-inativo { background: rgba(231,76,60,0.15); color: var(--vermelho); }
+  .badge-pendente { background: rgba(243,156,18,0.15); color: var(--amarelo); }
+  .badge-pago { background: rgba(46,204,113,0.15); color: var(--verde); }
+  .badge-receita { background: rgba(46,204,113,0.1); color: var(--verde); }
+  .badge-gasto { background: rgba(231,76,60,0.1); color: var(--vermelho); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 480px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--azul-claro);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--azul-medio);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* RELATORIO */
+  .relatorio-header {
+    background: linear-gradient(135deg, var(--azul-escuro), var(--azul-medio));
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .rel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 3px;
+  }
+  .rel-periodo {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .rel-lucro-big {
+    text-align: right;
+  }
+  .rel-lucro-big .label { font-size: 0.6rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
+  .rel-lucro-big .value { font-size: 2rem; font-weight: 700; color: #fff; }
+
+  .rel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .rel-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+  }
+  .rel-card .label { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .rel-card .value { font-size: 1.5rem; font-weight: 700; }
+  .rel-card.green .value { color: var(--verde); }
+  .rel-card.red .value { color: var(--vermelho); }
+  .rel-card.blue .value { color: var(--azul-claro); }
+
+  .month-selector {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .month-selector select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .name { color: var(--text); }
+  .breakdown-row .amount { font-weight: 700; }
+  .breakdown-row .amount.green { color: var(--verde); }
+  .breakdown-row .amount.red { color: var(--vermelho); }
+
+  /* ORÇAMENTO */
+  .orc-form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .orc-lista-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  /* PREVIEW PDF */
+  @media screen {
+    #pdf-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #pdf-overlay.open { display: flex; }
+    #pdf-close {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 301;
+    }
+    #pdf-print-btn {
+      position: fixed;
+      top: 20px;
+      right: 120px;
+      background: var(--azul-medio);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 301;
+    }
+  }
+
+  /* ========== MOBILE ========== */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    height: 64px;
+  }
+  .bottom-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .bottom-nav-btn.active { color: var(--azul-vivo); }
+  .bottom-nav-btn svg { width: 20px; height: 20px; }
+
+  @media (max-width: 640px) {
+    .nav-tabs { display: none; }
+    .nav-sub { display: none; }
+    nav { height: 52px; padding: 0 14px; }
+    main { padding: 14px 12px; padding-bottom: 80px; }
+
+    .bottom-nav { display: flex; }
+
+    .summary-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .summary-card { padding: 14px 12px; }
+    .summary-card .sc-value { font-size: 1.3rem; }
+
+    .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .section-header > div { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { min-width: 520px; }
+
+    .form-row { grid-template-columns: 1fr; }
+    .modal { border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%; max-height: 85vh; }
+    .modal-overlay.open { align-items: flex-end; }
+
+    .relatorio-header { flex-direction: column; gap: 10px; }
+    .rel-lucro-big { text-align: left; }
+    .rel-grid { grid-template-columns: 1fr 1fr; }
+
+    #relatorio-content > div:last-of-type { grid-template-columns: 1fr !important; }
+    #section-orcamento > div[style] { grid-template-columns: 1fr !important; }
+
+    .month-selector { flex-wrap: wrap; gap: 6px; }
+
+    .orc-form-card { padding: 16px; }
+  }
+
+  /* DOCUMENTO PDF */
+  #pdf-doc {
+    background: #fff;
+    width: 794px;
+    min-height: 1123px;
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: 'Montserrat', sans-serif;
+    color: #111;
+  }
+
+  .pdf-header {
+    background: linear-gradient(135deg, #023e8a 0%, #0077b6 60%, #0096c7 100%);
+    padding: 36px 48px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pdf-logo-area { display: flex; align-items: center; gap: 16px; }
+  .pdf-logo-svg { width: 52px; height: 52px; }
+  .pdf-logo-text {}
+  .pdf-logo-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+    line-height: 1;
+  }
+  .pdf-logo-sub {
+    font-size: 0.55rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .pdf-contato {
+    text-align: right;
+  }
+  .pdf-contato p {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+  .pdf-contato p strong { color: #fff; }
+
+  .pdf-body { padding: 40px 48px; }
+
+  .pdf-titulo-doc {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #e8f4f8;
+  }
+  .pdf-titulo-doc h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #023e8a;
+    letter-spacing: 3px;
+  }
+  .pdf-titulo-doc .pdf-num {
+    font-size: 0.65rem;
+    color: #888;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  .pdf-meta { text-align: right; }
+  .pdf-meta p { font-size: 0.72rem; color: #555; line-height: 1.9; }
+  .pdf-meta p strong { color: #023e8a; }
+
+  .pdf-cliente-box {
+    background: #f0f8ff;
+    border-left: 4px solid #0096c7;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+  .pdf-cliente-box .label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #0077b6;
+    margin-bottom: 4px;
+  }
+  .pdf-cliente-box .nome { font-size: 1rem; font-weight: 700; color: #023e8a; }
+  .pdf-cliente-box .end { font-size: 0.75rem; color: #555; margin-top: 2px; }
+
+  .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  .pdf-table thead tr { background: #023e8a; }
+  .pdf-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .pdf-table thead th:last-child { text-align: right; }
+  .pdf-table tbody tr { border-bottom: 1px solid #e8f4f8; }
+  .pdf-table tbody tr:nth-child(even) { background: #f8fcff; }
+  .pdf-table tbody td {
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: #333;
+    vertical-align: top;
+  }
+  .pdf-table tbody td:last-child { text-align: right; font-weight: 700; color: #023e8a; }
+
+  .pdf-total-area {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 32px;
+  }
+  .pdf-total-box {
+    background: linear-gradient(135deg, #023e8a, #0077b6);
+    border-radius: 10px;
+    padding: 16px 28px;
+    min-width: 220px;
+    text-align: right;
+  }
+  .pdf-total-box .label { font-size: 0.6rem; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+  .pdf-total-box .value { font-size: 1.6rem; font-weight: 700; color: #fff; margin-top: 2px; }
+
+  .pdf-obs-box {
+    background: #f9f9f9;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+  .pdf-obs-box .label { font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+  .pdf-obs-box p { font-size: 0.78rem; color: #444; line-height: 1.6; }
+
+  .pdf-validade {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: #888;
+    margin-bottom: 32px;
+  }
+  .pdf-validade strong { color: #333; }
+
+  .pdf-footer {
+    background: #f0f8ff;
+    border-top: 2px solid #0096c7;
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pdf-footer .left { font-size: 0.65rem; color: #0077b6; font-weight: 600; letter-spacing: 1px; }
+  .pdf-footer .right { font-size: 0.65rem; color: #888; }
+
+  @media print {
+    @page { margin: 0; size: A4 portrait; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body {
+      background: #fff !important;
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+    body > *:not(#pdf-overlay) { display: none !important; }
+    #pdf-overlay {
+      display: block !important;
+      position: static !important;
+      background: #fff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 210mm !important;
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+    #pdf-close, #pdf-print-btn { display: none !important; }
+    #pdf-doc {
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      width: 210mm !important;
+      min-height: 0 !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <!-- Mini logo card fiel à identidade visual -->
+    <div style="background:linear-gradient(135deg,#caf0f8 0%,#90e0ef 100%);border-radius:10px;padding:6px 12px;display:flex;align-items:center;gap:8px;">
+      <svg style="width:26px;height:26px;" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="12" fill="#0096c7"/>
+        <line x1="28" y1="4" x2="28" y2="12" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="44" x2="28" y2="52" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="4" y1="28" x2="12" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="44" y1="28" x2="52" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="11.5" y1="11.5" x2="17" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="39" y1="39" x2="44.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="44.5" y1="11.5" x2="39" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="17" y1="39" x2="11.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M18 30 C21 25, 24 25, 28 29 C32 33, 35 33, 38 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:900;color:#023e8a;letter-spacing:3px;line-height:1;">PAULO</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.45rem;font-weight:700;color:#0077b6;letter-spacing:5px;">PISCINA</div>
+      </div>
+    </div>
+    <div class="nav-sub" style="margin-left:4px;">Sistema de Gestão</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showSection('clientes', null)">Clientes</button>
+    <button class="tab-btn" onclick="showSection('financeiro', null)">Financeiro</button>
+    <button class="tab-btn" onclick="showSection('relatorio', null)">Relatório</button>
+    <button class="tab-btn" onclick="showSection('orcamento', null)">Orçamento</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ===== CLIENTES ===== -->
+  <section id="section-clientes" class="section active">
+    <div class="summary-grid">
+      <div class="summary-card sc-clientes">
+        <div class="sc-label">Total de Clientes</div>
+        <div class="sc-value" id="total-clientes">0</div>
+        <div class="sc-sub">ativos cadastrados</div>
+      </div>
+      <div class="summary-card sc-receita">
+        <div class="sc-label">Mensalidades (previsto)</div>
+        <div class="sc-value" id="receita-mensal">R$ 0</div>
+        <div class="sc-sub">soma das mensalidades</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">CLIENTES</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" id="btn-filtro-inadimplentes" style="background:rgba(231,76,60,0.15);color:var(--vermelho);border:1px solid rgba(231,76,60,0.3);" onclick="toggleFiltroInadimplentes()">⚠ Inadimplentes</button>
+        <button class="btn btn-primary" onclick="abrirModalCliente()">+ Novo Cliente</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Endereço</th>
+            <th>Mensalidade</th>
+            <th>Pagamento</th>
+            <th>Último Pgto</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-clientes">
+          <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum cliente cadastrado ainda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== FINANCEIRO ===== -->
+  <section id="section-financeiro" class="section">
+    <div class="summary-grid">
+      <div class="summary-card sc-receita">
+        <div class="sc-label">Entradas (mês)</div>
+        <div class="sc-value" id="fin-receita">R$ 0</div>
+        <div class="sc-sub">este mês</div>
+      </div>
+      <div class="summary-card sc-gasto">
+        <div class="sc-label">Saídas (mês)</div>
+        <div class="sc-value" id="fin-gasto">R$ 0</div>
+        <div class="sc-sub">este mês</div>
+      </div>
+      <div class="summary-card sc-lucro">
+        <div class="sc-label">Lucro Líquido</div>
+        <div class="sc-value" id="fin-lucro">R$ 0</div>
+        <div class="sc-sub">entradas − saídas</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">LANÇAMENTOS</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="abrirModalLancamento('receita')">+ Entrada</button>
+        <button class="btn btn-sm" style="background:rgba(231,76,60,0.15);color:var(--vermelho);border:1px solid rgba(231,76,60,0.3);" onclick="abrirModalLancamento('gasto')">+ Saída</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-lancamentos">
+          <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum lançamento ainda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== RELATÓRIO ===== -->
+  <section id="section-relatorio" class="section">
+    <div class="month-selector">
+      <span style="font-size:0.7rem;color:var(--text-muted);letter-spacing:1px;">PERÍODO:</span>
+      <select id="sel-mes" onchange="gerarRelatorio()">
+        <option value="0">Janeiro</option>
+        <option value="1">Fevereiro</option>
+        <option value="2">Março</option>
+        <option value="3" selected>Abril</option>
+        <option value="4">Maio</option>
+        <option value="5">Junho</option>
+        <option value="6">Julho</option>
+        <option value="7">Agosto</option>
+        <option value="8">Setembro</option>
+        <option value="9">Outubro</option>
+        <option value="10">Novembro</option>
+        <option value="11">Dezembro</option>
+      </select>
+      <select id="sel-ano" onchange="gerarRelatorio()">
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="imprimirRelatorio()">Exportar PDF</button>
+    </div>
+
+    <div id="relatorio-content">
+      <div class="relatorio-header">
+        <div>
+          <div class="rel-title">PAULO PISCINA</div>
+          <div class="rel-periodo" id="rel-periodo-label">Relatório — Abril 2026</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:4px;letter-spacing:1px;">Manutenção & Limpeza</div>
+        </div>
+        <div class="rel-lucro-big">
+          <div class="label">LUCRO LÍQUIDO</div>
+          <div class="value" id="rel-lucro-big">R$ 0</div>
+        </div>
+      </div>
+
+      <div class="rel-grid">
+        <div class="rel-card green">
+          <div class="label">Total Entradas</div>
+          <div class="value" id="rel-total-receita">R$ 0</div>
+        </div>
+        <div class="rel-card red">
+          <div class="label">Total Saídas</div>
+          <div class="value" id="rel-total-gasto">R$ 0</div>
+        </div>
+        <div class="rel-card blue">
+          <div class="label">Clientes Ativos</div>
+          <div class="value" id="rel-clientes-ativos">0</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <div class="table-wrapper" style="padding:20px;">
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Entradas por Cliente</div>
+          <div id="rel-breakdown-receita">
+            <div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:16px;">Sem dados</div>
+          </div>
+        </div>
+
+        <div class="table-wrapper" style="padding:20px;">
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Saídas por Categoria</div>
+          <div id="rel-breakdown-gasto">
+            <div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:16px;">Sem dados</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== ORÇAMENTO ===== -->
+  <section id="section-orcamento" class="section">
+    <div class="section-header">
+      <div class="section-title">NOVO ORÇAMENTO</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+      <!-- Coluna esquerda: formulário -->
+      <div class="orc-form-card">
+        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">Dados do Cliente</div>
+
+        <div class="form-group">
+          <label>Nome do Cliente</label>
+          <input type="text" id="orc-cliente-nome" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label>Endereço / Local da Piscina</label>
+          <input type="text" id="orc-cliente-end" placeholder="Rua, número, bairro">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="orc-cliente-tel" placeholder="(15) 99999-9999">
+        </div>
+
+        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 12px;">Serviços / Itens</div>
+
+        <div id="orc-itens-lista">
+          <!-- itens adicionados aqui -->
+        </div>
+
+        <button class="btn" style="width:100%;background:rgba(0,150,199,0.1);color:var(--azul-vivo);border:1px dashed rgba(0,150,199,0.3);margin-top:8px;" onclick="adicionarItemOrc()">+ Adicionar Item</button>
+
+        <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 12px;">Observações</div>
+        <div class="form-group">
+          <textarea id="orc-obs" rows="3" placeholder="Validade do orçamento, condições, forma de pagamento..."></textarea>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:12px;" onclick="visualizarOrcamento()">Visualizar e Gerar PDF</button>
+      </div>
+
+      <!-- Coluna direita: orçamentos salvos -->
+      <div>
+        <div class="orc-lista-header">
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);">Orçamentos Emitidos</div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Nº</th>
+                <th>Cliente</th>
+                <th>Data</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-orcamentos">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum orçamento emitido ainda</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-btn active" onclick="showSection('clientes', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    Clientes
+  </button>
+  <button class="bottom-nav-btn" onclick="showSection('financeiro', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    Financeiro
+  </button>
+  <button class="bottom-nav-btn" onclick="showSection('relatorio', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    Relatório
+  </button>
+  <button class="bottom-nav-btn" onclick="showSection('orcamento', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+    </svg>
+    Orçamento
+  </button>
+</nav>
+
+<!-- PDF OVERLAY -->
+<div id="pdf-overlay">
+  <button id="pdf-close" onclick="fecharPDF()">✕ Fechar</button>
+  <button id="pdf-print-btn" onclick="window.print()">Imprimir / Salvar PDF</button>
+  <div id="pdf-doc">
+    <!-- preenchido via JS -->
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-title">NOVO CLIENTE</div>
+    <div class="form-group">
+      <label>Nome completo</label>
+      <input type="text" id="cli-nome" placeholder="Ex: João Silva">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" id="cli-tel" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Mensalidade (R$)</label>
+        <input type="number" id="cli-mensalidade" placeholder="200">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" id="cli-endereco" placeholder="Rua, número, bairro">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Frequência de visita</label>
+        <select id="cli-frequencia">
+          <option value="Semanal">Semanal</option>
+          <option value="Quinzenal" selected>Quinzenal</option>
+          <option value="Mensal">Mensal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Dia de visita (semana)</label>
+        <select id="cli-dia">
+          <option value="Segunda">Segunda</option>
+          <option value="Terça">Terça</option>
+          <option value="Quarta">Quarta</option>
+          <option value="Quinta">Quinta</option>
+          <option value="Sexta">Sexta</option>
+          <option value="Sábado">Sábado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <textarea id="cli-obs" rows="2" placeholder="Tamanho da piscina, produtos usados, acesso..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="fecharModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div class="modal-overlay" id="modal-editar-cliente">
+  <div class="modal">
+    <div class="modal-title">EDITAR CLIENTE</div>
+    <input type="hidden" id="edit-cli-id">
+    <div class="form-group">
+      <label>Nome completo</label>
+      <input type="text" id="edit-cli-nome" placeholder="Ex: João Silva">
+    </div>
+    <div class="form-group">
+      <label>Telefone / WhatsApp</label>
+      <input type="text" id="edit-cli-tel" placeholder="(11) 99999-9999">
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" id="edit-cli-endereco" placeholder="Rua, número, bairro">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Frequência de visita</label>
+        <select id="edit-cli-frequencia">
+          <option value="Semanal">Semanal</option>
+          <option value="Quinzenal">Quinzenal</option>
+          <option value="Mensal">Mensal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Dia de visita</label>
+        <select id="edit-cli-dia">
+          <option value="Segunda">Segunda</option>
+          <option value="Terça">Terça</option>
+          <option value="Quarta">Quarta</option>
+          <option value="Quinta">Quinta</option>
+          <option value="Sexta">Sexta</option>
+          <option value="Sábado">Sábado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <textarea id="edit-cli-obs" rows="2" placeholder="Tamanho da piscina, produtos usados, acesso..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Status do Cliente</label>
+        <select id="edit-cli-status">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status de Pagamento</label>
+        <select id="edit-cli-pagamento-status">
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago</option>
+          <option value="atrasado">Atrasado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data do Último Pagamento</label>
+        <input type="date" id="edit-cli-ultimo-pagamento">
+      </div>
+      <div class="form-group">
+        <label>Mensalidade (R$)</label>
+        <input type="number" id="edit-cli-mensalidade2" placeholder="200">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="fecharModal('modal-editar-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoCliente()">Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAGAMENTO -->
+<div class="modal-overlay" id="modal-pagamento">
+  <div class="modal">
+    <div class="modal-title">REGISTRAR PAGAMENTO</div>
+    <input type="hidden" id="pag-cliente-id">
+    <div class="form-group">
+      <label>Cliente</label>
+      <input type="text" id="pag-cliente-nome" disabled style="opacity:0.6;">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data do Pagamento</label>
+        <input type="date" id="pag-data">
+      </div>
+      <div class="form-group">
+        <label>Valor Recebido (R$)</label>
+        <input type="number" id="pag-valor" placeholder="0,00" step="0.01">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="fecharModal('modal-pagamento')">Cancelar</button>
+      <button class="btn btn-success" onclick="salvarPagamento()">Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LANÇAMENTO -->
+<div class="modal-overlay" id="modal-lancamento">
+  <div class="modal">
+    <div class="modal-title" id="modal-lanc-title">NOVO LANÇAMENTO</div>
+    <input type="hidden" id="lanc-tipo">
+    <div class="form-group">
+      <label>Data</label>
+      <input type="date" id="lanc-data">
+    </div>
+    <div class="form-group">
+      <label>Descrição</label>
+      <input type="text" id="lanc-descricao" placeholder="Ex: Mensalidade João Silva / Cloro piscina...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="lanc-categoria">
+          <!-- preenchido via JS -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="number" id="lanc-valor" placeholder="0,00" step="0.01">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="fecharModal('modal-lancamento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLancamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== SUPABASE =====================
+const { createClient } = supabase;
+const sb = createClient(
+  'https://fdlkcydiwaddqnxqyxky.supabase.co',
+  'sb_publishable_AKfENoR0oWsd8LooXmY9hg_Y-LYneNM'
+);
+
+// ===================== NAV =====================
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else if (event && event.target) event.target.classList.add('active');
+  if (name === 'clientes') renderClientes();
+  if (name === 'financeiro') renderFinanceiro();
+  if (name === 'relatorio') gerarRelatorio();
+  if (name === 'orcamento') { renderOrcamentos(); renderItensOrc(); }
+}
+
+// ===================== CLIENTES =====================
+function abrirModalCliente() {
+  document.getElementById('modal-cliente').classList.add('open');
+}
+
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+async function salvarCliente() {
+  const nome = document.getElementById('cli-nome').value.trim();
+  if (!nome) { alert('Informe o nome do cliente.'); return; }
+  const { error } = await sb.from('clientes').insert({
+    nome,
+    telefone: document.getElementById('cli-tel').value.trim(),
+    endereco: document.getElementById('cli-endereco').value.trim(),
+    mensalidade: parseFloat(document.getElementById('cli-mensalidade').value) || 0,
+    frequencia: document.getElementById('cli-frequencia').value,
+    dia: document.getElementById('cli-dia').value,
+    obs: document.getElementById('cli-obs').value.trim(),
+    status: 'ativo'
+  });
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+  fecharModal('modal-cliente');
+  ['cli-nome','cli-tel','cli-endereco','cli-mensalidade','cli-obs'].forEach(id => document.getElementById(id).value = '');
+  renderClientes();
+}
+
+// ===================== FILTRO INADIMPLENTES =====================
+let filtroInadimplentes = false;
+
+function toggleFiltroInadimplentes() {
+  filtroInadimplentes = !filtroInadimplentes;
+  const btn = document.getElementById('btn-filtro-inadimplentes');
+  if (filtroInadimplentes) {
+    btn.style.background = 'rgba(231,76,60,0.4)';
+    btn.style.color = '#fff';
+    btn.textContent = '✕ Todos';
+  } else {
+    btn.style.background = 'rgba(231,76,60,0.15)';
+    btn.style.color = 'var(--vermelho)';
+    btn.textContent = '⚠ Inadimplentes';
+  }
+  renderClientes();
+}
+
+function cobrarWhatsApp(nome, tel, mensalidade) {
+  const primeiroNome = nome.split(' ')[0];
+  const valor = mensalidade > 0 ? ` no valor de *R$ ${mensalidade.toFixed(2).replace('.', ',')}*` : '';
+  const msg = encodeURIComponent(
+    `Olá, ${primeiroNome}! 👋\n\nPassando para avisar que a mensalidade da manutenção da sua piscina${valor} está em aberto.\n\nQualquer dúvida, estou à disposição! 🏊\n\n— Paulo Piscina`
+  );
+  window.open(`https://wa.me/55${tel}?text=${msg}`, '_blank');
+}
+
+async function atualizarRecebidoMes() {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const inicio = `${ano}-${mes}-01`;
+  const fim = `${ano}-${mes}-31`;
+  const { data } = await sb.from('lancamentos')
+    .select('valor')
+    .eq('tipo', 'receita')
+    .gte('data', inicio)
+    .lte('data', fim);
+  const total = (data || []).reduce((s, l) => s + (l.valor || 0), 0);
+  const el = document.getElementById('receita-recebida-mes');
+  if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+function abrirEdicaoCliente(c) {
+  document.getElementById('edit-cli-id').value = c.id;
+  document.getElementById('edit-cli-nome').value = c.nome || '';
+  document.getElementById('edit-cli-tel').value = c.telefone || '';
+  document.getElementById('edit-cli-endereco').value = c.endereco || '';
+  document.getElementById('edit-cli-frequencia').value = c.frequencia || 'Quinzenal';
+  document.getElementById('edit-cli-dia').value = c.dia || 'Segunda';
+  document.getElementById('edit-cli-obs').value = c.obs || '';
+  document.getElementById('edit-cli-status').value = c.status || 'ativo';
+  document.getElementById('edit-cli-pagamento-status').value = c.pagamento_status || 'pendente';
+  document.getElementById('edit-cli-ultimo-pagamento').value = c.ultimo_pagamento || '';
+  document.getElementById('edit-cli-mensalidade2').value = c.mensalidade || '';
+  document.getElementById('modal-editar-cliente').classList.add('open');
+}
+
+async function salvarEdicaoCliente() {
+  const id               = document.getElementById('edit-cli-id').value;
+  const nome             = document.getElementById('edit-cli-nome').value.trim();
+  const pagamentoStatus  = document.getElementById('edit-cli-pagamento-status').value;
+  const ultimoPagamento  = document.getElementById('edit-cli-ultimo-pagamento').value || null;
+  const mensalidade      = parseFloat(document.getElementById('edit-cli-mensalidade2').value) || 0;
+
+  const { error } = await sb.from('clientes').update({
+    nome,
+    telefone: document.getElementById('edit-cli-tel').value.trim(),
+    mensalidade,
+    endereco: document.getElementById('edit-cli-endereco').value.trim(),
+    frequencia: document.getElementById('edit-cli-frequencia').value,
+    dia: document.getElementById('edit-cli-dia').value,
+    obs: document.getElementById('edit-cli-obs').value.trim(),
+    status: document.getElementById('edit-cli-status').value,
+    pagamento_status: pagamentoStatus,
+    ultimo_pagamento: ultimoPagamento,
+  }).eq('id', id);
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+
+  // Se marcou como pago, verifica se já existe lançamento no mesmo mês antes de criar
+  if (pagamentoStatus === 'pago' && ultimoPagamento && mensalidade > 0) {
+    const mesRef = ultimoPagamento.slice(0, 7); // 'YYYY-MM'
+    const { data: existente } = await sb.from('lancamentos')
+      .select('id')
+      .eq('tipo', 'receita')
+      .ilike('descricao', `%${nome}%`)
+      .gte('data', mesRef + '-01')
+      .lte('data', mesRef + '-31')
+      .limit(1);
+
+    if (!existente || existente.length === 0) {
+      await sb.from('lancamentos').insert({
+        data: ultimoPagamento,
+        descricao: 'Mensalidade ' + nome,
+        categoria: 'Mensalidade',
+        tipo: 'receita',
+        valor: mensalidade
+      });
+      await atualizarRecebidoMes();
+    }
+  }
+
+  fecharModal('modal-editar-cliente');
+  await renderClientes();
+}
+
+async function excluirCliente(id) {
+  if (!confirm('Excluir este cliente?')) return;
+  await sb.from('clientes').delete().eq('id', id);
+  renderClientes();
+}
+
+async function marcarAtendimento(id) {
+  await sb.from('clientes').update({ ultimo_atendimento: new Date().toISOString().split('T')[0] }).eq('id', id);
+  renderClientes();
+}
+
+function abrirModalPagamento(id, nome, mensalidade) {
+  document.getElementById('pag-cliente-id').value = id;
+  document.getElementById('pag-cliente-nome').value = nome;
+  document.getElementById('pag-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('pag-valor').value = mensalidade || '';
+  document.getElementById('modal-pagamento').classList.add('open');
+}
+
+async function salvarPagamento() {
+  const id    = document.getElementById('pag-cliente-id').value;
+  const nome  = document.getElementById('pag-cliente-nome').value;
+  const data  = document.getElementById('pag-data').value;
+  const valor = parseFloat(document.getElementById('pag-valor').value) || 0;
+  if (!data || !valor) { alert('Preencha a data e o valor.'); return; }
+
+  await Promise.all([
+    sb.from('clientes').update({ pagamento_status: 'pago', ultimo_pagamento: data }).eq('id', id),
+    sb.from('lancamentos').insert({ data, descricao: 'Mensalidade ' + nome, categoria: 'Mensalidade', tipo: 'receita', valor })
+  ]);
+
+  fecharModal('modal-pagamento');
+  renderClientes();
+}
+
+function diasSemPagar(ultimoPagamento) {
+  if (!ultimoPagamento) return null;
+  const diff = Math.floor((new Date() - new Date(ultimoPagamento + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
+function badgePagamento(c) {
+  const dias = diasSemPagar(c.ultimo_pagamento);
+  if (c.pagamento_status === 'pago' && dias !== null && dias <= 35) {
+    return `<span class="badge badge-pago">✓ Pago</span>`;
+  }
+  if (dias === null) {
+    return `<span class="badge badge-pendente">Pendente</span>`;
+  }
+  if (dias > 35) {
+    return `<span class="badge badge-inativo" style="background:rgba(231,76,60,0.15);color:var(--vermelho);">⚠ ${dias}d atraso</span>`;
+  }
+  return `<span class="badge badge-pendente">Pendente</span>`;
+}
+
+async function renderClientes() {
+  const tbody = document.getElementById('tabela-clientes');
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">Carregando...</td></tr>';
+  const { data: clientes, error } = await sb.from('clientes').select('*').order('nome');
+  if (error) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--vermelho);padding:32px;">Erro ao carregar clientes</td></tr>'; return; }
+  const ativos = clientes.filter(c => c.status === 'ativo');
+  const receitaTotal = ativos.reduce((s, c) => s + (c.mensalidade || 0), 0);
+  document.getElementById('total-clientes').textContent = ativos.length;
+  document.getElementById('receita-mensal').textContent = 'R$ ' + receitaTotal.toFixed(2).replace('.', ',');
+  await atualizarRecebidoMes();
+  let lista = clientes;
+  if (filtroInadimplentes) {
+    const mesAtual = new Date().toISOString().slice(0, 7);
+    lista = clientes.filter(c => c.pagamento_status !== 'pago' || !c.ultimo_pagamento || c.ultimo_pagamento.slice(0, 7) !== mesAtual);
+  }
+  if (lista.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">${filtroInadimplentes ? 'Nenhum inadimplente este mês 🎉' : 'Nenhum cliente cadastrado ainda'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lista.map(c => `
+    <tr>
+      <td><strong style="cursor:pointer;color:var(--azul-claro);text-decoration:underline dotted;" onclick='abrirEdicaoCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>${c.nome}</strong></td>
+      <td>${c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" style="color:var(--verde);text-decoration:none;" title="Abrir WhatsApp">📱 ${c.telefone}</a>` : '—'}</td>
+      <td style="font-size:0.72rem;color:var(--text-muted);">${c.endereco || '—'}</td>
+      <td style="color:var(--verde);font-weight:700;">R$ ${(c.mensalidade||0).toFixed(2).replace('.',',')}</td>
+      <td>${badgePagamento(c)}</td>
+      <td style="font-size:0.72rem;color:var(--text-muted);">${c.ultimo_pagamento || '—'}</td>
+      <td><span class="badge badge-${c.status}">${c.status}</span></td>
+      <td style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-sm" title="Registrar pagamento" style="background:rgba(46,204,113,0.15);color:var(--verde);border:none;" onclick="abrirModalPagamento(${c.id}, '${c.nome.replace(/'/g,"\\'")}', ${c.mensalidade||0})">R$</button>
+        ${c.pagamento_status !== 'pago' && c.telefone ? `<button class="btn btn-sm" title="Cobrar via WhatsApp" style="background:rgba(37,211,102,0.15);color:#25d366;border:none;" onclick="cobrarWhatsApp('${c.nome.replace(/'/g,"\\'")}', '${c.telefone.replace(/\D/g,'')}', ${c.mensalidade||0})">💬</button>` : ''}
+        <button class="btn btn-danger" onclick="excluirCliente(${c.id})">×</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ===================== FINANCEIRO =====================
+const categorias = {
+  receita: ['Mensalidade', 'Serviço avulso', 'Instalação', 'Outros'],
+  gasto: ['Cloro', 'Algicida', 'Clarificante', 'PH', 'Equipamento', 'Gasolina', 'Transporte', 'Outros']
+};
+
+function abrirModalLancamento(tipo) {
+  document.getElementById('lanc-tipo').value = tipo;
+  document.getElementById('modal-lanc-title').textContent = tipo === 'receita' ? 'NOVA ENTRADA' : 'NOVA SAÍDA';
+  const sel = document.getElementById('lanc-categoria');
+  sel.innerHTML = categorias[tipo].map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('lanc-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-lancamento').classList.add('open');
+}
+
+async function salvarLancamento() {
+  const descricao = document.getElementById('lanc-descricao').value.trim();
+  const valor = parseFloat(document.getElementById('lanc-valor').value) || 0;
+  if (!descricao || !valor) { alert('Preencha descrição e valor.'); return; }
+  const { error } = await sb.from('lancamentos').insert({
+    data: document.getElementById('lanc-data').value,
+    descricao,
+    categoria: document.getElementById('lanc-categoria').value,
+    tipo: document.getElementById('lanc-tipo').value,
+    valor
+  });
+  if (error) { alert('Erro ao salvar: ' + error.message); return; }
+  fecharModal('modal-lancamento');
+  document.getElementById('lanc-descricao').value = '';
+  document.getElementById('lanc-valor').value = '';
+  renderFinanceiro();
+}
+
+async function excluirLancamento(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  await sb.from('lancamentos').delete().eq('id', id);
+  renderFinanceiro();
+}
+
+async function renderFinanceiro() {
+  const tbody = document.getElementById('tabela-lancamentos');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Carregando...</td></tr>';
+  const { data: lancamentos } = await sb.from('lancamentos').select('*').order('data', { ascending: false });
+  const agora = new Date();
+  const mes = agora.getMonth();
+  const ano = agora.getFullYear();
+  const doMes = (lancamentos || []).filter(l => {
+    const d = new Date(l.data + 'T00:00:00');
+    return d.getMonth() === mes && d.getFullYear() === ano;
+  });
+  const receita = doMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
+  const gasto = doMes.filter(l => l.tipo === 'gasto').reduce((s, l) => s + l.valor, 0);
+  document.getElementById('fin-receita').textContent = 'R$ ' + receita.toFixed(2).replace('.', ',');
+  document.getElementById('fin-gasto').textContent = 'R$ ' + gasto.toFixed(2).replace('.', ',');
+  document.getElementById('fin-lucro').textContent = 'R$ ' + (receita - gasto).toFixed(2).replace('.', ',');
+  if (!lancamentos || lancamentos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum lançamento ainda</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lancamentos.map(l => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:0.72rem;">${l.data}</td>
+      <td>${l.descricao}</td>
+      <td><span class="badge" style="background:rgba(144,224,239,0.1);color:var(--azul-claro);">${l.categoria}</span></td>
+      <td><span class="badge badge-${l.tipo === 'receita' ? 'receita' : 'gasto'}">${l.tipo === 'receita' ? 'Entrada' : 'Saída'}</span></td>
+      <td style="font-weight:700;color:${l.tipo === 'receita' ? 'var(--verde)' : 'var(--vermelho)'};">
+        ${l.tipo === 'receita' ? '+' : '-'} R$ ${l.valor.toFixed(2).replace('.', ',')}
+      </td>
+      <td><button class="btn btn-danger" onclick="excluirLancamento(${l.id})">×</button></td>
+    </tr>
+  `).join('');
+}
+
+// ===================== RELATÓRIO =====================
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+async function gerarRelatorio() {
+  const mes = parseInt(document.getElementById('sel-mes').value);
+  const ano = parseInt(document.getElementById('sel-ano').value);
+  document.getElementById('rel-periodo-label').textContent = `Relatório — ${meses[mes]} ${ano}`;
+  const mesStr = String(mes + 1).padStart(2, '0');
+  const dataInicio = `${ano}-${mesStr}-01`;
+  const proximoMes = mes + 1 === 12 ? `${ano + 1}-01-01` : `${ano}-${String(mes + 2).padStart(2, '0')}-01`;
+  const [{ data: lancamentos }, { data: clientes }] = await Promise.all([
+    sb.from('lancamentos').select('*').gte('data', dataInicio).lt('data', proximoMes),
+    sb.from('clientes').select('id,status')
+  ]);
+  const all = lancamentos || [];
+  const receita = all.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
+  const gasto = all.filter(l => l.tipo === 'gasto').reduce((s, l) => s + l.valor, 0);
+  const ativos = (clientes || []).filter(c => c.status === 'ativo').length;
+  document.getElementById('rel-lucro-big').textContent = 'R$ ' + (receita - gasto).toFixed(2).replace('.', ',');
+  document.getElementById('rel-total-receita').textContent = 'R$ ' + receita.toFixed(2).replace('.', ',');
+  document.getElementById('rel-total-gasto').textContent = 'R$ ' + gasto.toFixed(2).replace('.', ',');
+  document.getElementById('rel-clientes-ativos').textContent = ativos;
+  const receitaLanc = all.filter(l => l.tipo === 'receita');
+  const gastoLanc = all.filter(l => l.tipo === 'gasto');
+  const divR = document.getElementById('rel-breakdown-receita');
+  divR.innerHTML = receitaLanc.length === 0
+    ? '<div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:16px;">Sem entradas neste período</div>'
+    : receitaLanc.map(l => `<div class="breakdown-row"><div><div class="name">${l.descricao}</div><div style="font-size:0.6rem;color:var(--text-muted);">${l.categoria} · ${l.data}</div></div><div class="amount green">+ R$ ${l.valor.toFixed(2).replace('.', ',')}</div></div>`).join('');
+  const catTotais = {};
+  gastoLanc.forEach(l => { catTotais[l.categoria] = (catTotais[l.categoria] || 0) + l.valor; });
+  const divG = document.getElementById('rel-breakdown-gasto');
+  divG.innerHTML = gastoLanc.length === 0
+    ? '<div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:16px;">Sem saídas neste período</div>'
+    : Object.entries(catTotais).sort((a,b) => b[1]-a[1]).map(([cat, val]) => `<div class="breakdown-row"><div class="name">${cat}</div><div class="amount red">- R$ ${val.toFixed(2).replace('.', ',')}</div></div>`).join('');
+}
+
+async function imprimirRelatorio() {
+  const mes = parseInt(document.getElementById('sel-mes').value);
+  const ano = parseInt(document.getElementById('sel-ano').value);
+  const mesStr = String(mes + 1).padStart(2, '0');
+  const dataInicio = `${ano}-${mesStr}-01`;
+  const proximoMes = mes + 1 === 12 ? `${ano + 1}-01-01` : `${ano}-${String(mes + 2).padStart(2, '0')}-01`;
+
+  const [{ data: lancamentos }, { data: clientes }] = await Promise.all([
+    sb.from('lancamentos').select('*').gte('data', dataInicio).lt('data', proximoMes).order('data'),
+    sb.from('clientes').select('id,status')
+  ]);
+
+  const all = lancamentos || [];
+  const receitaLanc = all.filter(l => l.tipo === 'receita');
+  const gastoLanc   = all.filter(l => l.tipo === 'gasto');
+  const receita = receitaLanc.reduce((s, l) => s + l.valor, 0);
+  const gasto   = gastoLanc.reduce((s, l) => s + l.valor, 0);
+  const lucro   = receita - gasto;
+  const ativos  = (clientes || []).filter(c => c.status === 'ativo').length;
+
+  const tabelaEntradas = receitaLanc.length === 0
+    ? '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;">Sem entradas neste período</td></tr>'
+    : receitaLanc.map(l => `<tr><td>${l.data.split('-').reverse().join('/')}</td><td>${l.descricao}</td><td style="text-align:right;font-weight:700;color:#027a48;">+ R$ ${l.valor.toFixed(2).replace('.',',')}</td></tr>`).join('');
+
+  const catTotais = {};
+  gastoLanc.forEach(l => { catTotais[l.categoria] = (catTotais[l.categoria] || 0) + l.valor; });
+  const tabelaSaidas = gastoLanc.length === 0
+    ? '<tr><td colspan="2" style="text-align:center;color:#aaa;padding:16px;">Sem saídas neste período</td></tr>'
+    : Object.entries(catTotais).sort((a,b)=>b[1]-a[1]).map(([cat,val]) => `<tr><td>${cat}</td><td style="text-align:right;font-weight:700;color:#b91c1c;">- R$ ${val.toFixed(2).replace('.',',')}</td></tr>`).join('');
+
+  document.getElementById('pdf-doc').innerHTML = `
+    <div class="pdf-header">
+      <div class="pdf-logo-area">
+        <div style="background:linear-gradient(135deg,#caf0f8 0%,#90e0ef 100%);border-radius:16px;padding:14px 20px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:140px;">
+          <svg style="width:40px;height:40px;margin-bottom:3px;" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="12" fill="#0096c7"/><line x1="28" y1="4" x2="28" y2="12" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/><line x1="28" y1="44" x2="28" y2="52" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/><line x1="4" y1="28" x2="12" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/><line x1="44" y1="28" x2="52" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/><line x1="11.5" y1="11.5" x2="17" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/><line x1="39" y1="39" x2="44.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/><line x1="44.5" y1="11.5" x2="39" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/><line x1="17" y1="39" x2="11.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/><path d="M18 30 C21 25, 24 25, 28 29 C32 33, 35 33, 38 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <div style="font-family:'Cinzel',serif;font-size:1.2rem;font-weight:900;color:#023e8a;letter-spacing:4px;line-height:1;">PAULO</div>
+          <div style="font-family:'Cinzel',serif;font-size:0.5rem;font-weight:700;color:#0077b6;letter-spacing:8px;">PISCINA</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.35rem;font-weight:600;color:#0096c7;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Manutenção &amp; Limpeza</div>
+        </div>
+      </div>
+      <div class="pdf-contato">
+        <p style="font-size:0.85rem;font-weight:700;color:#fff;letter-spacing:1px;">${meses[mes].toUpperCase()} ${ano}</p>
+        <p style="margin-top:4px;">📱 <strong>(15) 99757-5179</strong></p>
+        <p>✉️ paulo_piscinas01@icloud.com</p>
+        <p>📸 @paulo_piscinas01</p>
+      </div>
+    </div>
+
+    <div class="pdf-body">
+      <div class="pdf-titulo-doc" style="margin-bottom:20px;">
+        <div>
+          <h1>RELATÓRIO FINANCEIRO</h1>
+          <div class="pdf-num">${meses[mes]} ${ano} · ${ativos} clientes ativos</div>
+        </div>
+      </div>
+
+      <!-- Cards resumo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;text-align:center;">
+          <div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#16a34a;margin-bottom:6px;">Total Entradas</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#16a34a;">R$ ${receita.toFixed(2).replace('.',',')}</div>
+        </div>
+        <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:16px;text-align:center;">
+          <div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#dc2626;margin-bottom:6px;">Total Saídas</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#dc2626;">R$ ${gasto.toFixed(2).replace('.',',')}</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#023e8a,#0077b6);border-radius:10px;padding:16px;text-align:center;">
+          <div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:6px;">Lucro Líquido</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#fff;">R$ ${lucro.toFixed(2).replace('.',',')}</div>
+        </div>
+      </div>
+
+      <!-- Entradas -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#16a34a;margin-bottom:8px;border-bottom:2px solid #bbf7d0;padding-bottom:6px;">Entradas</div>
+        <table class="pdf-table">
+          <thead><tr><th>Data</th><th>Descrição</th><th style="text-align:right;">Valor</th></tr></thead>
+          <tbody>${tabelaEntradas}</tbody>
+        </table>
+      </div>
+
+      <!-- Saídas -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#dc2626;margin-bottom:8px;border-bottom:2px solid #fecdd3;padding-bottom:6px;">Saídas por Categoria</div>
+        <table class="pdf-table">
+          <thead><tr><th>Categoria</th><th style="text-align:right;">Total</th></tr></thead>
+          <tbody>${tabelaSaidas}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pdf-footer">
+      <div class="left">PAULO PISCINA · Relatório ${meses[mes]} ${ano}</div>
+      <div class="right">@paulo_piscinas01 · (15) 99757-5179</div>
+    </div>
+  `;
+
+  document.getElementById('pdf-overlay').classList.add('open');
+}
+
+// ===================== ORÇAMENTO =====================
+let orcItens = [];
+
+function adicionarItemOrc() {
+  orcItens.push({ id: Date.now(), descricao: '', valor: 0 });
+  renderItensOrc();
+}
+
+function removerItemOrc(id) {
+  orcItens = orcItens.filter(i => i.id !== id);
+  renderItensOrc();
+}
+
+function renderItensOrc() {
+  const container = document.getElementById('orc-itens-lista');
+  if (orcItens.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:12px 0;">Nenhum item. Clique em + Adicionar Item.</div>';
+    return;
+  }
+  container.innerHTML = orcItens.map(item => `
+    <div style="display:grid;grid-template-columns:1fr 120px 32px;gap:8px;margin-bottom:8px;align-items:center;">
+      <input type="text" placeholder="Descrição do serviço" value="${item.descricao}"
+        oninput="orcItens.find(i=>i.id===${item.id}).descricao=this.value"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:0.78rem;outline:none;">
+      <input type="number" placeholder="R$ valor" value="${item.valor||''}"
+        oninput="orcItens.find(i=>i.id===${item.id}).valor=parseFloat(this.value)||0"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--verde);font-family:'Montserrat',sans-serif;font-size:0.78rem;font-weight:700;outline:none;">
+      <button onclick="removerItemOrc(${item.id})"
+        style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:var(--vermelho);border-radius:6px;padding:8px;cursor:pointer;font-size:0.8rem;">×</button>
+    </div>
+  `).join('');
+}
+
+async function gerarNumeroOrc() {
+  const { count } = await sb.from('orcamentos').select('*', { count: 'exact', head: true });
+  return String((count || 0) + 1).padStart(3, '0');
+}
+
+async function visualizarOrcamento() {
+  const nome = document.getElementById('orc-cliente-nome').value.trim();
+  if (!nome) { alert('Informe o nome do cliente.'); return; }
+  if (orcItens.length === 0) { alert('Adicione pelo menos um item.'); return; }
+
+  const end  = document.getElementById('orc-cliente-end').value.trim();
+  const tel  = document.getElementById('orc-cliente-tel').value.trim();
+  const obs  = document.getElementById('orc-obs').value.trim();
+  const data = new Date().toISOString().split('T')[0];
+  const num  = await gerarNumeroOrc();
+
+  const dataFmt = data.split('-').reverse().join('/');
+
+  const total = orcItens.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+
+  const itensHTML = orcItens.map(i => `
+    <tr>
+      <td>${i.descricao || '—'}</td>
+      <td style="text-align:right;font-weight:700;color:#023e8a;">R$ ${(parseFloat(i.valor)||0).toFixed(2).replace('.',',')}</td>
+    </tr>
+  `).join('');
+
+  const obsHTML = obs ? `
+    <div class="pdf-obs-box">
+      <div class="label">Observações</div>
+      <p>${obs}</p>
+    </div>` : '';
+
+  document.getElementById('pdf-doc').innerHTML = `
+    <div class="pdf-header">
+      <div class="pdf-logo-area">
+        <!-- Logo card fiel à identidade visual -->
+        <div style="background:linear-gradient(135deg,#caf0f8 0%,#90e0ef 100%);border-radius:16px;padding:16px 22px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:160px;">
+          <svg style="width:48px;height:48px;margin-bottom:4px;" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="28" cy="28" r="12" fill="#0096c7"/>
+            <line x1="28" y1="4" x2="28" y2="12" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+            <line x1="28" y1="44" x2="28" y2="52" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+            <line x1="4" y1="28" x2="12" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+            <line x1="44" y1="28" x2="52" y2="28" stroke="#0077b6" stroke-width="3" stroke-linecap="round"/>
+            <line x1="11.5" y1="11.5" x2="17" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="39" y1="39" x2="44.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="44.5" y1="11.5" x2="39" y2="17" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="17" y1="39" x2="11.5" y2="44.5" stroke="#0077b6" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M18 30 C21 25, 24 25, 28 29 C32 33, 35 33, 38 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+          <div style="font-family:'Cinzel',serif;font-size:1.5rem;font-weight:900;color:#023e8a;letter-spacing:5px;line-height:1;">PAULO</div>
+          <div style="font-family:'Cinzel',serif;font-size:0.55rem;font-weight:700;color:#0077b6;letter-spacing:10px;">PISCINA</div>
+          <div style="display:flex;gap:5px;margin-top:3px;">
+            <div style="width:7px;height:10px;background:#0077b6;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(180deg);opacity:0.45;"></div>
+            <div style="width:7px;height:10px;background:#0077b6;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(180deg) scale(1.2);opacity:0.7;"></div>
+            <div style="width:7px;height:10px;background:#0077b6;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(180deg);opacity:0.35;"></div>
+          </div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:0.38rem;font-weight:600;color:#0096c7;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Manutenção &amp; Limpeza</div>
+        </div>
+      </div>
+      <div class="pdf-contato">
+        <p>📱 <strong>(15) 99757-5179</strong></p>
+        <p>✉️ paulo_piscinas01@icloud.com</p>
+        <p>📸 @paulo_piscinas01</p>
+      </div>
+    </div>
+
+    <div class="pdf-body">
+      <div class="pdf-titulo-doc">
+        <div>
+          <h1>ORÇAMENTO</h1>
+          <div class="pdf-num">Nº ${num} · Emitido em ${dataFmt}</div>
+        </div>
+        <div class="pdf-meta">
+          <p><strong>Data de emissão:</strong> ${dataFmt}</p>
+        </div>
+      </div>
+
+      <div class="pdf-cliente-box">
+        <div class="label">Cliente</div>
+        <div class="nome">${nome}</div>
+        ${end ? `<div class="end">📍 ${end}</div>` : ''}
+        ${tel ? `<div class="end">📱 ${tel}</div>` : ''}
+      </div>
+
+      <table class="pdf-table">
+        <thead>
+          <tr>
+            <th>Descrição do Serviço</th>
+            <th style="text-align:right;">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itensHTML}
+        </tbody>
+      </table>
+
+      <div class="pdf-total-area">
+        <div class="pdf-total-box">
+          <div class="label">Total do Orçamento</div>
+          <div class="value">R$ ${total.toFixed(2).replace('.',',')}</div>
+        </div>
+      </div>
+
+      ${obsHTML}
+    </div>
+
+    <div class="pdf-footer">
+      <div class="left">PAULO PISCINA · Manutenção &amp; Limpeza</div>
+      <div class="right">@paulo_piscinas01 · (15) 99757-5179</div>
+    </div>
+  `;
+
+  document.getElementById('pdf-overlay').classList.add('open');
+
+  // Salvar no Supabase
+  await sb.from('orcamentos').insert({ num, cliente: nome, data, total });
+  renderOrcamentos();
+}
+
+function fecharPDF() {
+  document.getElementById('pdf-overlay').classList.remove('open');
+}
+
+async function renderOrcamentos() {
+  const tbody = document.getElementById('tabela-orcamentos');
+  if (!tbody) return;
+  const { data: lista } = await sb.from('orcamentos').select('*').order('created_at', { ascending: false });
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">Nenhum orçamento emitido ainda</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(o => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:0.72rem;">#${o.num}</td>
+      <td><strong>${o.cliente}</strong></td>
+      <td style="font-size:0.72rem;color:var(--text-muted);">${o.data ? o.data.split('-').reverse().join('/') : '—'}</td>
+      <td style="color:var(--verde);font-weight:700;">R$ ${(o.total||0).toFixed(2).replace('.',',')}</td>
+      <td></td>
+    </tr>
+  `).join('');
+}
+
+// ===================== INIT =====================
+renderClientes();
+renderFinanceiro();
+renderOrcamentos();
+</script>
+
+</body>
+</html>
